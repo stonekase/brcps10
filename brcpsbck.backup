@@ -1,0 +1,774 @@
+--
+-- PostgreSQL database dump
+--
+
+-- Dumped from database version 9.4.4
+-- Dumped by pg_dump version 9.4.4
+-- Started on 2015-07-21 00:15:45
+
+SET statement_timeout = 0;
+SET lock_timeout = 0;
+SET client_encoding = 'UTF8';
+SET standard_conforming_strings = on;
+SET check_function_bodies = false;
+SET client_min_messages = warning;
+
+--
+-- TOC entry 2088 (class 1262 OID 16452)
+-- Dependencies: 2087
+-- Name: brcps; Type: COMMENT; Schema: -; Owner: postgres
+--
+
+COMMENT ON DATABASE brcps IS 'bala recharge card pawn shop database';
+
+
+--
+-- TOC entry 190 (class 3079 OID 11855)
+-- Name: plpgsql; Type: EXTENSION; Schema: -; Owner: 
+--
+
+CREATE EXTENSION IF NOT EXISTS plpgsql WITH SCHEMA pg_catalog;
+
+
+--
+-- TOC entry 2091 (class 0 OID 0)
+-- Dependencies: 190
+-- Name: EXTENSION plpgsql; Type: COMMENT; Schema: -; Owner: 
+--
+
+COMMENT ON EXTENSION plpgsql IS 'PL/pgSQL procedural language';
+
+
+SET search_path = public, pg_catalog;
+
+SET default_tablespace = '';
+
+SET default_with_oids = false;
+
+--
+-- TOC entry 177 (class 1259 OID 16472)
+-- Name: tbl_account_details; Type: TABLE; Schema: public; Owner: postgres; Tablespace: 
+--
+
+CREATE TABLE tbl_account_details (
+    id bigint NOT NULL,
+    msisdn bigint NOT NULL,
+    bank_code integer,
+    account_no bigint NOT NULL,
+    created_time timestamp without time zone,
+    date_modified timestamp without time zone
+);
+
+
+ALTER TABLE tbl_account_details OWNER TO postgres;
+
+--
+-- TOC entry 176 (class 1259 OID 16470)
+-- Name: tbl_account_details_id_seq; Type: SEQUENCE; Schema: public; Owner: postgres
+--
+
+CREATE SEQUENCE tbl_account_details_id_seq
+    START WITH 1
+    INCREMENT BY 1
+    NO MINVALUE
+    NO MAXVALUE
+    CACHE 1;
+
+
+ALTER TABLE tbl_account_details_id_seq OWNER TO postgres;
+
+--
+-- TOC entry 2092 (class 0 OID 0)
+-- Dependencies: 176
+-- Name: tbl_account_details_id_seq; Type: SEQUENCE OWNED BY; Schema: public; Owner: postgres
+--
+
+ALTER SEQUENCE tbl_account_details_id_seq OWNED BY tbl_account_details.id;
+
+
+--
+-- TOC entry 175 (class 1259 OID 16463)
+-- Name: tbl_banks; Type: TABLE; Schema: public; Owner: postgres; Tablespace: 
+--
+
+CREATE TABLE tbl_banks (
+    id bigint NOT NULL,
+    bank_name character varying,
+    bank_code integer
+);
+
+
+ALTER TABLE tbl_banks OWNER TO postgres;
+
+--
+-- TOC entry 2093 (class 0 OID 0)
+-- Dependencies: 175
+-- Name: TABLE tbl_banks; Type: COMMENT; Schema: public; Owner: postgres
+--
+
+COMMENT ON TABLE tbl_banks IS 'this is the table that contains all the relation of bank code and bank name';
+
+
+--
+-- TOC entry 174 (class 1259 OID 16461)
+-- Name: tbl_banks_id_seq; Type: SEQUENCE; Schema: public; Owner: postgres
+--
+
+CREATE SEQUENCE tbl_banks_id_seq
+    START WITH 1
+    INCREMENT BY 1
+    NO MINVALUE
+    NO MAXVALUE
+    CACHE 1;
+
+
+ALTER TABLE tbl_banks_id_seq OWNER TO postgres;
+
+--
+-- TOC entry 2094 (class 0 OID 0)
+-- Dependencies: 174
+-- Name: tbl_banks_id_seq; Type: SEQUENCE OWNED BY; Schema: public; Owner: postgres
+--
+
+ALTER SEQUENCE tbl_banks_id_seq OWNED BY tbl_banks.id;
+
+
+--
+-- TOC entry 188 (class 1259 OID 16523)
+-- Name: tbl_cleared_token; Type: TABLE; Schema: public; Owner: postgres; Tablespace: 
+--
+
+CREATE TABLE tbl_cleared_token (
+    token_cleared_time timestamp without time zone
+);
+
+
+ALTER TABLE tbl_cleared_token OWNER TO postgres;
+
+--
+-- TOC entry 181 (class 1259 OID 16493)
+-- Name: tbl_transactions; Type: TABLE; Schema: public; Owner: postgres; Tablespace: 
+--
+
+CREATE TABLE tbl_transactions (
+    id bigint NOT NULL,
+    msisdn bigint,
+    transaaction_type integer,
+    transaction_time timestamp without time zone,
+    transaction_amount double precision,
+    service_charge double precision
+);
+
+
+ALTER TABLE tbl_transactions OWNER TO postgres;
+
+--
+-- TOC entry 182 (class 1259 OID 16499)
+-- Name: tbl_failed_transaction; Type: TABLE; Schema: public; Owner: postgres; Tablespace: 
+--
+
+CREATE TABLE tbl_failed_transaction (
+    transaction_status integer
+)
+INHERITS (tbl_transactions);
+
+
+ALTER TABLE tbl_failed_transaction OWNER TO postgres;
+
+--
+-- TOC entry 2095 (class 0 OID 0)
+-- Dependencies: 182
+-- Name: TABLE tbl_failed_transaction; Type: COMMENT; Schema: public; Owner: postgres
+--
+
+COMMENT ON TABLE tbl_failed_transaction IS 'transaction_status [-1(failed transaction),0(pending transaction),1(successful transaction)]';
+
+
+--
+-- TOC entry 189 (class 1259 OID 16526)
+-- Name: tbl_recharge_voucher_transaction; Type: TABLE; Schema: public; Owner: postgres; Tablespace: 
+--
+
+CREATE TABLE tbl_recharge_voucher_transaction (
+    recharge_voucher_pin bigint
+)
+INHERITS (tbl_transactions);
+
+
+ALTER TABLE tbl_recharge_voucher_transaction OWNER TO postgres;
+
+--
+-- TOC entry 173 (class 1259 OID 16455)
+-- Name: tbl_subscribers; Type: TABLE; Schema: public; Owner: postgres; Tablespace: 
+--
+
+CREATE TABLE tbl_subscribers (
+    id bigint NOT NULL,
+    msisdn bigint NOT NULL,
+    created_time timestamp without time zone
+);
+
+
+ALTER TABLE tbl_subscribers OWNER TO postgres;
+
+--
+-- TOC entry 2096 (class 0 OID 0)
+-- Dependencies: 173
+-- Name: TABLE tbl_subscribers; Type: COMMENT; Schema: public; Owner: postgres
+--
+
+COMMENT ON TABLE tbl_subscribers IS 'this is the main subscriber table of the service';
+
+
+--
+-- TOC entry 172 (class 1259 OID 16453)
+-- Name: tbl_subscribers_id_seq; Type: SEQUENCE; Schema: public; Owner: postgres
+--
+
+CREATE SEQUENCE tbl_subscribers_id_seq
+    START WITH 1
+    INCREMENT BY 1
+    NO MINVALUE
+    NO MAXVALUE
+    CACHE 1;
+
+
+ALTER TABLE tbl_subscribers_id_seq OWNER TO postgres;
+
+--
+-- TOC entry 2097 (class 0 OID 0)
+-- Dependencies: 172
+-- Name: tbl_subscribers_id_seq; Type: SEQUENCE OWNED BY; Schema: public; Owner: postgres
+--
+
+ALTER SEQUENCE tbl_subscribers_id_seq OWNED BY tbl_subscribers.id;
+
+
+--
+-- TOC entry 183 (class 1259 OID 16503)
+-- Name: tbl_successful_transactions; Type: TABLE; Schema: public; Owner: postgres; Tablespace: 
+--
+
+CREATE TABLE tbl_successful_transactions (
+    transaction_status integer
+)
+INHERITS (tbl_transactions);
+
+
+ALTER TABLE tbl_successful_transactions OWNER TO postgres;
+
+--
+-- TOC entry 2098 (class 0 OID 0)
+-- Dependencies: 183
+-- Name: TABLE tbl_successful_transactions; Type: COMMENT; Schema: public; Owner: postgres
+--
+
+COMMENT ON TABLE tbl_successful_transactions IS 'transaction_status [-1(failed transaction),0(pending transaction),1(successful transaction)]';
+
+
+--
+-- TOC entry 186 (class 1259 OID 16513)
+-- Name: tbl_token; Type: TABLE; Schema: public; Owner: postgres; Tablespace: 
+--
+
+CREATE TABLE tbl_token (
+    id bigint NOT NULL,
+    msisdn bigint,
+    transaction_amount double precision,
+    generated_time timestamp without time zone,
+    transaction_token bigint NOT NULL,
+    token_expiration_time timestamp without time zone
+);
+
+
+ALTER TABLE tbl_token OWNER TO postgres;
+
+--
+-- TOC entry 2099 (class 0 OID 0)
+-- Dependencies: 186
+-- Name: TABLE tbl_token; Type: COMMENT; Schema: public; Owner: postgres
+--
+
+COMMENT ON TABLE tbl_token IS 'this table is where reside all the generated tokens for the application.All the sub token tables inherit from this table';
+
+
+--
+-- TOC entry 185 (class 1259 OID 16511)
+-- Name: tbl_token_id_seq; Type: SEQUENCE; Schema: public; Owner: postgres
+--
+
+CREATE SEQUENCE tbl_token_id_seq
+    START WITH 1
+    INCREMENT BY 1
+    NO MINVALUE
+    NO MAXVALUE
+    CACHE 1;
+
+
+ALTER TABLE tbl_token_id_seq OWNER TO postgres;
+
+--
+-- TOC entry 2100 (class 0 OID 0)
+-- Dependencies: 185
+-- Name: tbl_token_id_seq; Type: SEQUENCE OWNED BY; Schema: public; Owner: postgres
+--
+
+ALTER SEQUENCE tbl_token_id_seq OWNED BY tbl_token.id;
+
+
+--
+-- TOC entry 180 (class 1259 OID 16491)
+-- Name: tbl_transactions_id_seq; Type: SEQUENCE; Schema: public; Owner: postgres
+--
+
+CREATE SEQUENCE tbl_transactions_id_seq
+    START WITH 1
+    INCREMENT BY 1
+    NO MINVALUE
+    NO MAXVALUE
+    CACHE 1;
+
+
+ALTER TABLE tbl_transactions_id_seq OWNER TO postgres;
+
+--
+-- TOC entry 2101 (class 0 OID 0)
+-- Dependencies: 180
+-- Name: tbl_transactions_id_seq; Type: SEQUENCE OWNED BY; Schema: public; Owner: postgres
+--
+
+ALTER SEQUENCE tbl_transactions_id_seq OWNED BY tbl_transactions.id;
+
+
+--
+-- TOC entry 184 (class 1259 OID 16507)
+-- Name: tbl_unreconciled_transactions; Type: TABLE; Schema: public; Owner: postgres; Tablespace: 
+--
+
+CREATE TABLE tbl_unreconciled_transactions (
+    transaction_status integer
+)
+INHERITS (tbl_transactions);
+
+
+ALTER TABLE tbl_unreconciled_transactions OWNER TO postgres;
+
+--
+-- TOC entry 2102 (class 0 OID 0)
+-- Dependencies: 184
+-- Name: TABLE tbl_unreconciled_transactions; Type: COMMENT; Schema: public; Owner: postgres
+--
+
+COMMENT ON TABLE tbl_unreconciled_transactions IS 'transaction_status [-1(failed transaction),0(pending transaction),1(successful transaction)]';
+
+
+--
+-- TOC entry 179 (class 1259 OID 16485)
+-- Name: tbl_unsubscribe; Type: TABLE; Schema: public; Owner: postgres; Tablespace: 
+--
+
+CREATE TABLE tbl_unsubscribe (
+    id bigint NOT NULL,
+    msisdn bigint NOT NULL,
+    unsubscribe_time timestamp without time zone
+);
+
+
+ALTER TABLE tbl_unsubscribe OWNER TO postgres;
+
+--
+-- TOC entry 2103 (class 0 OID 0)
+-- Dependencies: 179
+-- Name: TABLE tbl_unsubscribe; Type: COMMENT; Schema: public; Owner: postgres
+--
+
+COMMENT ON TABLE tbl_unsubscribe IS 'this keeps record of all those who decide to unsubscribe from the service';
+
+
+--
+-- TOC entry 178 (class 1259 OID 16483)
+-- Name: tbl_unsubscribe_id_seq; Type: SEQUENCE; Schema: public; Owner: postgres
+--
+
+CREATE SEQUENCE tbl_unsubscribe_id_seq
+    START WITH 1
+    INCREMENT BY 1
+    NO MINVALUE
+    NO MAXVALUE
+    CACHE 1;
+
+
+ALTER TABLE tbl_unsubscribe_id_seq OWNER TO postgres;
+
+--
+-- TOC entry 2104 (class 0 OID 0)
+-- Dependencies: 178
+-- Name: tbl_unsubscribe_id_seq; Type: SEQUENCE OWNED BY; Schema: public; Owner: postgres
+--
+
+ALTER SEQUENCE tbl_unsubscribe_id_seq OWNED BY tbl_unsubscribe.id;
+
+
+--
+-- TOC entry 187 (class 1259 OID 16519)
+-- Name: tbl_used_token; Type: TABLE; Schema: public; Owner: postgres; Tablespace: 
+--
+
+CREATE TABLE tbl_used_token (
+    token_usage_time timestamp without time zone
+)
+INHERITS (tbl_token);
+
+
+ALTER TABLE tbl_used_token OWNER TO postgres;
+
+--
+-- TOC entry 1938 (class 2604 OID 16475)
+-- Name: id; Type: DEFAULT; Schema: public; Owner: postgres
+--
+
+ALTER TABLE ONLY tbl_account_details ALTER COLUMN id SET DEFAULT nextval('tbl_account_details_id_seq'::regclass);
+
+
+--
+-- TOC entry 1937 (class 2604 OID 16466)
+-- Name: id; Type: DEFAULT; Schema: public; Owner: postgres
+--
+
+ALTER TABLE ONLY tbl_banks ALTER COLUMN id SET DEFAULT nextval('tbl_banks_id_seq'::regclass);
+
+
+--
+-- TOC entry 1941 (class 2604 OID 16502)
+-- Name: id; Type: DEFAULT; Schema: public; Owner: postgres
+--
+
+ALTER TABLE ONLY tbl_failed_transaction ALTER COLUMN id SET DEFAULT nextval('tbl_transactions_id_seq'::regclass);
+
+
+--
+-- TOC entry 1946 (class 2604 OID 16529)
+-- Name: id; Type: DEFAULT; Schema: public; Owner: postgres
+--
+
+ALTER TABLE ONLY tbl_recharge_voucher_transaction ALTER COLUMN id SET DEFAULT nextval('tbl_transactions_id_seq'::regclass);
+
+
+--
+-- TOC entry 1936 (class 2604 OID 16458)
+-- Name: id; Type: DEFAULT; Schema: public; Owner: postgres
+--
+
+ALTER TABLE ONLY tbl_subscribers ALTER COLUMN id SET DEFAULT nextval('tbl_subscribers_id_seq'::regclass);
+
+
+--
+-- TOC entry 1942 (class 2604 OID 16506)
+-- Name: id; Type: DEFAULT; Schema: public; Owner: postgres
+--
+
+ALTER TABLE ONLY tbl_successful_transactions ALTER COLUMN id SET DEFAULT nextval('tbl_transactions_id_seq'::regclass);
+
+
+--
+-- TOC entry 1944 (class 2604 OID 16516)
+-- Name: id; Type: DEFAULT; Schema: public; Owner: postgres
+--
+
+ALTER TABLE ONLY tbl_token ALTER COLUMN id SET DEFAULT nextval('tbl_token_id_seq'::regclass);
+
+
+--
+-- TOC entry 1940 (class 2604 OID 16496)
+-- Name: id; Type: DEFAULT; Schema: public; Owner: postgres
+--
+
+ALTER TABLE ONLY tbl_transactions ALTER COLUMN id SET DEFAULT nextval('tbl_transactions_id_seq'::regclass);
+
+
+--
+-- TOC entry 1943 (class 2604 OID 16510)
+-- Name: id; Type: DEFAULT; Schema: public; Owner: postgres
+--
+
+ALTER TABLE ONLY tbl_unreconciled_transactions ALTER COLUMN id SET DEFAULT nextval('tbl_transactions_id_seq'::regclass);
+
+
+--
+-- TOC entry 1939 (class 2604 OID 16488)
+-- Name: id; Type: DEFAULT; Schema: public; Owner: postgres
+--
+
+ALTER TABLE ONLY tbl_unsubscribe ALTER COLUMN id SET DEFAULT nextval('tbl_unsubscribe_id_seq'::regclass);
+
+
+--
+-- TOC entry 1945 (class 2604 OID 16522)
+-- Name: id; Type: DEFAULT; Schema: public; Owner: postgres
+--
+
+ALTER TABLE ONLY tbl_used_token ALTER COLUMN id SET DEFAULT nextval('tbl_token_id_seq'::regclass);
+
+
+--
+-- TOC entry 2070 (class 0 OID 16472)
+-- Dependencies: 177
+-- Data for Name: tbl_account_details; Type: TABLE DATA; Schema: public; Owner: postgres
+--
+
+COPY tbl_account_details (id, msisdn, bank_code, account_no, created_time, date_modified) FROM stdin;
+1	8060189865	0	1234567890	2015-07-17 01:29:48.582	\N
+4	7010060890	3	1234567891	2015-07-19 00:34:59.716	\N
+6	7010000000	1	1234567890	2015-07-20 12:38:34.861	\N
+\.
+
+
+--
+-- TOC entry 2105 (class 0 OID 0)
+-- Dependencies: 176
+-- Name: tbl_account_details_id_seq; Type: SEQUENCE SET; Schema: public; Owner: postgres
+--
+
+SELECT pg_catalog.setval('tbl_account_details_id_seq', 6, true);
+
+
+--
+-- TOC entry 2068 (class 0 OID 16463)
+-- Dependencies: 175
+-- Data for Name: tbl_banks; Type: TABLE DATA; Schema: public; Owner: postgres
+--
+
+COPY tbl_banks (id, bank_name, bank_code) FROM stdin;
+1	Access Bank	1
+2	Citibank	2
+3	Diamond Bank	3
+4	Ecobank	4
+5	Fidelity Bank	5
+6	First Bank	6
+7	FCMB	7
+8	FSDH	8
+9	GTB	9
+10	Heritage Bank	10
+11	Keystone Bank	11
+12	Skye Bank	12
+13	Stanbic IBTC	13
+14	Sterling Bank	14
+15	Union Bank	15
+16	UBA	16
+17	Unity Bank	17
+18	Wema Bank	18
+19	Zenith Bank	19
+\.
+
+
+--
+-- TOC entry 2106 (class 0 OID 0)
+-- Dependencies: 174
+-- Name: tbl_banks_id_seq; Type: SEQUENCE SET; Schema: public; Owner: postgres
+--
+
+SELECT pg_catalog.setval('tbl_banks_id_seq', 19, true);
+
+
+--
+-- TOC entry 2081 (class 0 OID 16523)
+-- Dependencies: 188
+-- Data for Name: tbl_cleared_token; Type: TABLE DATA; Schema: public; Owner: postgres
+--
+
+COPY tbl_cleared_token (token_cleared_time) FROM stdin;
+\.
+
+
+--
+-- TOC entry 2075 (class 0 OID 16499)
+-- Dependencies: 182
+-- Data for Name: tbl_failed_transaction; Type: TABLE DATA; Schema: public; Owner: postgres
+--
+
+COPY tbl_failed_transaction (id, msisdn, transaaction_type, transaction_time, transaction_amount, transaction_status, service_charge) FROM stdin;
+\.
+
+
+--
+-- TOC entry 2082 (class 0 OID 16526)
+-- Dependencies: 189
+-- Data for Name: tbl_recharge_voucher_transaction; Type: TABLE DATA; Schema: public; Owner: postgres
+--
+
+COPY tbl_recharge_voucher_transaction (id, msisdn, transaaction_type, transaction_time, transaction_amount, service_charge, recharge_voucher_pin) FROM stdin;
+\.
+
+
+--
+-- TOC entry 2066 (class 0 OID 16455)
+-- Dependencies: 173
+-- Data for Name: tbl_subscribers; Type: TABLE DATA; Schema: public; Owner: postgres
+--
+
+COPY tbl_subscribers (id, msisdn, created_time) FROM stdin;
+1	8060189865	2015-07-17 01:29:48.444
+4	7010060890	2015-07-19 00:34:59.669
+6	7010000000	2015-07-20 12:38:34.828
+\.
+
+
+--
+-- TOC entry 2107 (class 0 OID 0)
+-- Dependencies: 172
+-- Name: tbl_subscribers_id_seq; Type: SEQUENCE SET; Schema: public; Owner: postgres
+--
+
+SELECT pg_catalog.setval('tbl_subscribers_id_seq', 6, true);
+
+
+--
+-- TOC entry 2076 (class 0 OID 16503)
+-- Dependencies: 183
+-- Data for Name: tbl_successful_transactions; Type: TABLE DATA; Schema: public; Owner: postgres
+--
+
+COPY tbl_successful_transactions (id, msisdn, transaaction_type, transaction_time, transaction_amount, transaction_status, service_charge) FROM stdin;
+\.
+
+
+--
+-- TOC entry 2079 (class 0 OID 16513)
+-- Dependencies: 186
+-- Data for Name: tbl_token; Type: TABLE DATA; Schema: public; Owner: postgres
+--
+
+COPY tbl_token (id, msisdn, transaction_amount, generated_time, transaction_token, token_expiration_time) FROM stdin;
+\.
+
+
+--
+-- TOC entry 2108 (class 0 OID 0)
+-- Dependencies: 185
+-- Name: tbl_token_id_seq; Type: SEQUENCE SET; Schema: public; Owner: postgres
+--
+
+SELECT pg_catalog.setval('tbl_token_id_seq', 1, false);
+
+
+--
+-- TOC entry 2074 (class 0 OID 16493)
+-- Dependencies: 181
+-- Data for Name: tbl_transactions; Type: TABLE DATA; Schema: public; Owner: postgres
+--
+
+COPY tbl_transactions (id, msisdn, transaaction_type, transaction_time, transaction_amount, service_charge) FROM stdin;
+\.
+
+
+--
+-- TOC entry 2109 (class 0 OID 0)
+-- Dependencies: 180
+-- Name: tbl_transactions_id_seq; Type: SEQUENCE SET; Schema: public; Owner: postgres
+--
+
+SELECT pg_catalog.setval('tbl_transactions_id_seq', 1, false);
+
+
+--
+-- TOC entry 2077 (class 0 OID 16507)
+-- Dependencies: 184
+-- Data for Name: tbl_unreconciled_transactions; Type: TABLE DATA; Schema: public; Owner: postgres
+--
+
+COPY tbl_unreconciled_transactions (id, msisdn, transaaction_type, transaction_time, transaction_amount, transaction_status, service_charge) FROM stdin;
+\.
+
+
+--
+-- TOC entry 2072 (class 0 OID 16485)
+-- Dependencies: 179
+-- Data for Name: tbl_unsubscribe; Type: TABLE DATA; Schema: public; Owner: postgres
+--
+
+COPY tbl_unsubscribe (id, msisdn, unsubscribe_time) FROM stdin;
+\.
+
+
+--
+-- TOC entry 2110 (class 0 OID 0)
+-- Dependencies: 178
+-- Name: tbl_unsubscribe_id_seq; Type: SEQUENCE SET; Schema: public; Owner: postgres
+--
+
+SELECT pg_catalog.setval('tbl_unsubscribe_id_seq', 1, false);
+
+
+--
+-- TOC entry 2080 (class 0 OID 16519)
+-- Dependencies: 187
+-- Data for Name: tbl_used_token; Type: TABLE DATA; Schema: public; Owner: postgres
+--
+
+COPY tbl_used_token (id, msisdn, transaction_amount, generated_time, transaction_token, token_usage_time, token_expiration_time) FROM stdin;
+\.
+
+
+--
+-- TOC entry 1950 (class 2606 OID 16531)
+-- Name: tbl_account_details_pkey; Type: CONSTRAINT; Schema: public; Owner: postgres; Tablespace: 
+--
+
+ALTER TABLE ONLY tbl_account_details
+    ADD CONSTRAINT tbl_account_details_pkey PRIMARY KEY (msisdn);
+
+
+--
+-- TOC entry 1948 (class 2606 OID 16460)
+-- Name: tbl_subscribers_pkey; Type: CONSTRAINT; Schema: public; Owner: postgres; Tablespace: 
+--
+
+ALTER TABLE ONLY tbl_subscribers
+    ADD CONSTRAINT tbl_subscribers_pkey PRIMARY KEY (msisdn);
+
+
+--
+-- TOC entry 1954 (class 2606 OID 16518)
+-- Name: tbl_token_pkey; Type: CONSTRAINT; Schema: public; Owner: postgres; Tablespace: 
+--
+
+ALTER TABLE ONLY tbl_token
+    ADD CONSTRAINT tbl_token_pkey PRIMARY KEY (transaction_token);
+
+
+--
+-- TOC entry 1952 (class 2606 OID 16498)
+-- Name: tbl_transactions_pkey; Type: CONSTRAINT; Schema: public; Owner: postgres; Tablespace: 
+--
+
+ALTER TABLE ONLY tbl_transactions
+    ADD CONSTRAINT tbl_transactions_pkey PRIMARY KEY (id);
+
+
+--
+-- TOC entry 1955 (class 2606 OID 16478)
+-- Name: tbl_account_details_msisdn_fkey; Type: FK CONSTRAINT; Schema: public; Owner: postgres
+--
+
+ALTER TABLE ONLY tbl_account_details
+    ADD CONSTRAINT tbl_account_details_msisdn_fkey FOREIGN KEY (msisdn) REFERENCES tbl_subscribers(msisdn);
+
+
+--
+-- TOC entry 2090 (class 0 OID 0)
+-- Dependencies: 5
+-- Name: public; Type: ACL; Schema: -; Owner: postgres
+--
+
+REVOKE ALL ON SCHEMA public FROM PUBLIC;
+REVOKE ALL ON SCHEMA public FROM postgres;
+GRANT ALL ON SCHEMA public TO postgres;
+GRANT ALL ON SCHEMA public TO PUBLIC;
+
+
+-- Completed on 2015-07-21 00:15:46
+
+--
+-- PostgreSQL database dump complete
+--
+
