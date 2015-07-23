@@ -109,6 +109,24 @@ public class brcps_asyncrequestprocessor implements Runnable{
 		{
 			System.out.println("entered inputA , Session:"+(int)session.getAttribute("inputA"));
 			
+			if((int)session.getAttribute("inputA")==22 && !input.equals("0") || !input.equals("00"))
+			{
+				session.setAttribute("inputA", 2);
+			}
+			if((int)session.getAttribute("inputA")==32 && !input.equals("0") || !input.equals("00"))
+			{
+				session.setAttribute("inputA", 2);
+			}
+			if((int)session.getAttribute("inputA")==42 && !input.equals("0") || !input.equals("00"))
+			{
+				session.setAttribute("inputA", 2);
+			}
+			if((int)session.getAttribute("inputA")==52 && !input.equals("0") || !input.equals("00"))
+			{
+				session.setAttribute("inputA", 2);
+			}
+			
+//====================================================================================================================================			
 			if((int)session.getAttribute("inputA")==1 && input.equals("1"))
 			{
 				System.out.println("you have choosen to sell Airtime");
@@ -119,6 +137,7 @@ public class brcps_asyncrequestprocessor implements Runnable{
 				} catch (IOException e) {
 					e.printStackTrace();
 				}
+				session.setAttribute("inputA", 2);//setting the session to 2
 				if (session != null) {
 				    session.invalidate();
 				}

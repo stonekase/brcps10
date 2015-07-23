@@ -3,7 +3,6 @@ package com.sourcecard.servlets;
 import java.io.IOException;
 import java.io.PrintWriter;
 import java.util.Properties;
-
 import javax.servlet.AsyncContext;
 import javax.servlet.ServletConfig;
 import javax.servlet.ServletException;
