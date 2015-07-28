@@ -4,10 +4,8 @@ import java.io.IOException;
 import java.io.PrintWriter;
 import java.sql.ResultSet;
 import java.sql.SQLException;
-
 import javax.servlet.AsyncContext;
 import javax.servlet.http.HttpSession;
-
 import com.sourcard.helpers.analyseMenus;
 import com.sourcard.helpers.brcps_databasequery;
 import com.sourcard.helpers.brcps_helpers;
@@ -72,6 +70,8 @@ public class brcps_asyncrequestprocessor implements Runnable{
 							e.printStackTrace();
 						}
 						session.setAttribute("CustomerMenu", "customermenu");
+						session.setAttribute("MenuName","mainmenu");
+						session.setAttribute("MenuLevel","levelzero");
 						//complete the processing
 						asyncCtx.complete();
 						return;
@@ -87,6 +87,8 @@ public class brcps_asyncrequestprocessor implements Runnable{
 						}
 							
 						session.setAttribute("SubscriptionMenu","subscriptionmenu");
+						session.setAttribute("MenuName","mainmenu");
+						session.setAttribute("MenuLevel","levelzero");
 						//complete the processing
 						asyncCtx.complete();
 						return;
@@ -104,13 +106,13 @@ public class brcps_asyncrequestprocessor implements Runnable{
 		{
 			//analyse subscription menu
 			analyseMenus.SubscriptionMenu(subscriber_msisdn,(String)session.getAttribute("SubscriptionMenu"),
-					session,asyncCtx);
+					session,asyncCtx,input);
 		}
 		else if(((String)session.getAttribute("CustomerMenu")).equals("customermenu"))
 		{
 			//analyse customer menu 
 			analyseMenus.CustomerMenu(subscriber_msisdn,(String)session.getAttribute("CustomerMenu"),
-					session,asyncCtx);
+					session,asyncCtx,input);
 		}
 	}
 
