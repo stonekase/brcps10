@@ -102,13 +102,13 @@ public class brcps_asyncrequestprocessor implements Runnable{
 		}
 		
 		//express thy_self
-		if(((String)session.getAttribute("SubscriptionMenu")).equals("subscriptionmenu"))
+		if((String)session.getAttribute("SubscriptionMenu")=="subscriptionmenu")
 		{
 			//analyse subscription menu
 			analyseMenus.SubscriptionMenu(subscriber_msisdn,(String)session.getAttribute("SubscriptionMenu"),
 					session,asyncCtx,input);
 		}
-		else if(((String)session.getAttribute("CustomerMenu")).equals("customermenu"))
+		else if((String)session.getAttribute("CustomerMenu")=="customermenu")
 		{
 			//analyse customer menu 
 			analyseMenus.CustomerMenu(subscriber_msisdn,(String)session.getAttribute("CustomerMenu"),
