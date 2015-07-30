@@ -158,23 +158,23 @@ public class analyseMenus {
 						e.printStackTrace();
 					}//endotron
 				}
-				case "1":
+				case "6":
 				{
 					setBank(session,asyncCtx,input);
 				}
-				case "2":
+				case "7":
 				{
 					setBank(session,asyncCtx,input);
 				}
-				case "3":
+				case "8":
 				{
 					setBank(session,asyncCtx,input);
 				}
-				case "4":
+				case "9":
 				{
 					setBank(session,asyncCtx,input);
 				}
-				case "5":
+				case "10":
 				{
 					setBank(session,asyncCtx,input);
 				}
@@ -195,8 +195,78 @@ public class analyseMenus {
 				}
 			}
 		}
-	
-		
+		else if(((String)session.getAttribute("MenuName")).equals("bankpg2") &&((String)session.getAttribute("MenuLevel")).equals("levelone"))
+		{
+			switch(input)
+			{
+				case "0":
+				{
+					try 
+					{
+						PrintWriter out = asyncCtx.getResponse().getWriter();
+						out.println("Please choose Bank pg3:");
+						out.println("11:Keystone Bank \n12:Skye \n13:Stanbic IBTC \n14:Sterling Bank \n15:Union Bank \n0:Next Page \n00:Prev page"); 
+					} catch (IOException e) {
+						e.printStackTrace();
+					}
+					session.setAttribute("MenuName", "bankpg3");
+					session.setAttribute("MenuLevel", "levelone");
+					asyncCtx.complete();
+					
+					return;
+				}
+				case "00":
+				{
+					try 
+					{
+						PrintWriter out = asyncCtx.getResponse().getWriter();
+						out.println("Please choose Bank pg2:"); 
+						out.println("6:First Bank \n7:FCMB \n8:FSDH \n9:GTB \n10:Heritage Bank \n0:Next Page \n00:Prev page"); 
+					} catch (IOException e) {
+						e.printStackTrace();
+					}
+					session.setAttribute("MenuName", "bankpg1");
+					session.setAttribute("MenuLevel", "levelone");
+					asyncCtx.complete();
+					return;
+				}
+				case "11":
+				{
+					setBank(session,asyncCtx,input);
+				}
+				case "12":
+				{
+					setBank(session,asyncCtx,input);
+				}
+				case "13":
+				{
+					setBank(session,asyncCtx,input);
+				}
+				case "14":
+				{
+					setBank(session,asyncCtx,input);
+				}
+				case "15":
+				{
+					setBank(session,asyncCtx,input);
+				}
+				default:
+				{
+					try
+					{
+						PrintWriter out = asyncCtx.getResponse().getWriter();
+						out.println("Invalid Input");
+					} catch (IOException e) {
+						e.printStackTrace();
+					}
+					asyncCtx.complete();
+					if (session != null) {
+					    session.invalidate();
+					}
+					return;
+				}
+			}
+		}
 	}
 	
 	private static void setBank(HttpSession session,AsyncContext asyncCtx,String input)
@@ -211,8 +281,8 @@ public class analyseMenus {
 			e.printStackTrace();
 		}
 		
-		session.setAttribute("MenuName","mainmenu");
-		session.setAttribute("MenuLevel","levelzero");
+		session.setAttribute("MenuName","bankaccount");
+		session.setAttribute("MenuLevel","levelone");
 		asyncCtx.complete();
 		return;
 	}
