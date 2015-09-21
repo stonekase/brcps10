@@ -76,14 +76,16 @@ public class brcps_requests extends HttpServlet {
 		session.setMaxInactiveInterval(60);//session only lasts 15 seconds
 		
 		//check if it is aa valid http request
+		// http://localhost:9999/InterswitchDispatcher/BRCPS_DispatchServlet?transactionId=1561909139&receipient_msisdn=347010060890&transfer_amount=43
 		if(brcps_helpers.IsValidRequestParameters(request))
 		{
+			System.out.println("legit request received on webservice");
 			verifyCustomerSubscription(request,response,session);
 		}
 		else
 		{
 			PrintWriter out = response.getWriter();
-			out.println("Sorry wrong input");
+			out.println("Sorry wrong request");
 		}
 		
 	}
@@ -104,8 +106,9 @@ public class brcps_requests extends HttpServlet {
 		
 		//getting the request and setting them up
 	 	
-	 	System.out.println("msisdn:"+request.getParameter("msisdn"));
-	 	System.out.println("input: "+request.getParameter("input"));
+	 	System.out.println("transaction ID: "+request.getParameter("transactionId"));
+	 	System.out.println("receipient msisdn: "+request.getParameter("receipient_msisdn"));
+	 	System.out.println("transfer amount: "+request.getParameter("transfer_amount"));
 		
 		//creating the executor threadpool
 		ThreadPoolExecutor executor = (ThreadPoolExecutor)request

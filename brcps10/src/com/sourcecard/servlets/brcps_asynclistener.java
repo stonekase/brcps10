@@ -13,14 +13,12 @@ public class brcps_asynclistener implements AsyncListener{
 	public void onComplete(AsyncEvent event) throws IOException {
 		System.out.println("AppAsyncListener onComplete");
 		//it is illegal to call any of the responses after oncomplete is called
-		
 	}
 
 	@Override
 	public void onError(AsyncEvent event) throws IOException {
 		System.out.println("AppAsyncListener onError");
 		//we can return error response to client
-		
 		ServletResponse response = event.getAsyncContext().getResponse();
 		PrintWriter out = response.getWriter();
 		out.write("asynclistener error");
@@ -40,5 +38,4 @@ public class brcps_asynclistener implements AsyncListener{
 		PrintWriter out = response.getWriter();
 		out.write("timeout on asynclistener");
 	}
-
 }
