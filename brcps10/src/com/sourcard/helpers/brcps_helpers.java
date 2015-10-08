@@ -223,12 +223,12 @@ public class brcps_helpers {
 			.setParameter("transactionId", ""+transactionId)
 			.setParameter("transferAmount", ""+transferAmount)
 			.setParameter("transaction_msisdn", ""+msisdn)
-			.setParameter("param1", "")
-			.setParameter("param2", "")
-			.setParameter("param3", "")
-			.setParameter("param4", "")
-			.setParameter("param5", "")
-			.setParameter("param6", "")
+			.setParameter("param1",prop.getProperty("param1").toString())
+			.setParameter("param2",prop.getProperty("param2").toString())
+			.setParameter("param3", prop.getProperty("param3").toString())
+			.setParameter("param4", prop.getProperty("param4").toString())
+			.setParameter("param5", prop.getProperty("param5").toString())
+			.setParameter("param6", prop.getProperty("param6").toString())
 			.build();
 			
 			HttpGet request =  new HttpGet(uri);
@@ -239,7 +239,7 @@ public class brcps_helpers {
 			System.out.println("executed the http request....");
 			
 			//get the status code 
-			 statusCode = response.getStatusLine().getStatusCode();
+			statusCode = response.getStatusLine().getStatusCode();
 			
 			 return statusCode;
 		}catch(Exception ex)

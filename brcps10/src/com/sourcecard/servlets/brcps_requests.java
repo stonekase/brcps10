@@ -11,9 +11,7 @@ import javax.servlet.http.HttpServlet;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 import javax.servlet.http.HttpSession;
-
 import org.apache.tomcat.util.threads.ThreadPoolExecutor;
-
 import com.sourcard.helpers.*;
 
 /**
@@ -22,7 +20,6 @@ import com.sourcard.helpers.*;
 @WebServlet(asyncSupported = true, description = "this is the index servlet of the whole application",
 	urlPatterns = { "/brcps_requests" })
 public class brcps_requests extends HttpServlet {
-	
 	
 	private static final long serialVersionUID = 1L;
 	public static Properties prop;
@@ -43,6 +40,7 @@ public class brcps_requests extends HttpServlet {
 		if (brcps_helpers.FileExist(configFile))
 		{
 			System.out.println("File exist :" + configFile);
+			//log.info("File exist :" + configFile);
 			//the file exist so therefore extract the properties into the variable
 			prop = brcps_helpers.ReadConfigFile(configFile);
 			
@@ -73,13 +71,12 @@ public class brcps_requests extends HttpServlet {
 		response.setCharacterEncoding("UTF-8");
 		//getting the session attached to the request
 		HttpSession session = request.getSession(true);
-		session.setMaxInactiveInterval(60);//session only lasts 15 seconds
+		session.setMaxInactiveInterval(30);//session only lasts 15 seconds
 		
 		//check if it is aa valid http request
 		// http://localhost:9999/InterswitchDispatcher/BRCPS_DispatchServlet?transactionId=1561909139&receipient_msisdn=347010060890&transfer_amount=43
 		if(brcps_helpers.IsValidRequestParameters(request))
 		{
-			System.out.println("legit request received on webservice");
 			verifyCustomerSubscription(request,response,session);
 		}
 		else
@@ -89,13 +86,6 @@ public class brcps_requests extends HttpServlet {
 		}
 		
 	}
-	
-	/**
-	 * @see HttpServlet#doPost(HttpServletRequest request, HttpServletResponse response)
-	 */
-	protected void doPost(HttpServletRequest request, HttpServletResponse response) throws ServletException, IOException {
-	}
-
 	//this method will check our subscription database to check if a customer is subscribed
 	private void verifyCustomerSubscription(HttpServletRequest request,HttpServletResponse response,HttpSession session) {
 		
