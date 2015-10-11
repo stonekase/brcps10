@@ -11,6 +11,8 @@ import javax.servlet.http.HttpServlet;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 import javax.servlet.http.HttpSession;
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 import org.apache.tomcat.util.threads.ThreadPoolExecutor;
 import com.sourcard.helpers.*;
 
@@ -24,6 +26,7 @@ public class brcps_requests extends HttpServlet {
 	private static final long serialVersionUID = 1L;
 	public static Properties prop;
 	private String configFile = "C:\\brcps_config.conf";
+	public static Logger log = null;
 	
     /**
      * @see HttpServlet#HttpServlet()
@@ -36,6 +39,7 @@ public class brcps_requests extends HttpServlet {
 	 * @see Servlet#init(ServletConfig)
 	 */
 	public void init(ServletConfig config) throws ServletException {
+		log = LogManager.getRootLogger();
 		//initiate the config file
 		if (brcps_helpers.FileExist(configFile))
 		{
@@ -62,6 +66,8 @@ public class brcps_requests extends HttpServlet {
 	 */
 	protected void doGet(HttpServletRequest request, HttpServletResponse response) throws ServletException, IOException {
 		
+		log.info("received info log");
+		log.error("error log written too");
 		//the get request will be used here because of internal debug and testing 
 		//but on production the post will be requested
 		
