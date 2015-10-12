@@ -1,14 +1,14 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <Configuration status="WARN">
     <Properties>
-        <Property name="log-path">logs</Property>
+        <Property name="log-path">..\logs</Property>
     </Properties>
     <Appenders>
         <Console name="console-log" target="SYSTEM_OUT">
             <PatternLayout pattern="[%-5level] %d{yyyy-MM-dd HH:mm:ss.SSS} [%t] %c{1} - %msg%n"/>
         </Console>
-        <RollingFile name="trace-log" fileName="${log-path}/brcps-trace.log"
-                     filePattern="${log-path}/brcps-trace-%d{yyyy-MM-dd}.log">
+        <RollingFile name="trace-log" fileName="${sys:catalina.home}/logs/brcps-trace.log"
+                     filePattern="${sys:catalina.home}/logs/brcps-trace-%d{yyyy-MM-dd}.log">
             <PatternLayout>
                 <pattern>[%-5level] %d{yyyy-MM-dd HH:mm:ss.SSS} [%t] %c{1} - %msg%n</pattern>
             </PatternLayout>
@@ -16,8 +16,8 @@
                 <TimeBasedTriggeringPolicy interval="1" modulate="true"/>
             </Policies>
         </RollingFile>
-        <RollingFile name="error-log" fileName="${log-path}/brcps-error.log"
-                     filePattern="${log-path}/brcps-error-%d{yyyy-MM-dd}.log">
+        <RollingFile name="error-log" fileName="${sys:catalina.home}/logs/brcps-error.log"
+                     filePattern="${sys:catalina.home}/logs/brcps-error-%d{yyyy-MM-dd}.log">
             <PatternLayout>
                 <pattern>[%-5level] %d{yyyy-MM-dd HH:mm:ss.SSS} [%t] %c{1} - %msg%n</pattern>
             </PatternLayout>
@@ -25,8 +25,8 @@
                 <TimeBasedTriggeringPolicy interval="1" modulate="true"/>
             </Policies>
         </RollingFile>
-        <RollingFile name="info-log" fileName="${log-path}/brcps-info.log"
-                     filePattern="${log-path}/brcps-info-%d{yyyy-MM-dd}.log">
+        <RollingFile name="info-log" fileName="${sys:catalina.home}/logs/brcps-info.log"
+                     filePattern="${sys:catalina.home}/logs/brcps-info-%d{yyyy-MM-dd}.log">
             <PatternLayout>
                 <pattern>[%-5level] %d{yyyy-MM-dd HH:mm:ss.SSS} [%t] %c{1} - %msg%n</pattern>
             </PatternLayout>

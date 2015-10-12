@@ -46,48 +46,54 @@ public class brcps_asyncrequestprocessor implements Runnable{
 						int response = brcps_databasequery.moveTransactionToPassed(transactionId, 0);
 						if(response == 1)
 						{
-							System.out.println("successfully moved and updated transaction");
-							//brcps_helpers.sendSms(receipient_msisdn,brcps_helpers.transactionComplete());
+							brcps_requests.log.info("Success :: TransactionID:"+transactionId+" ,Msisdn:"+receipient_msisdn+" ,cashout:"+
+									transfer_amount+" ,Account:"+account_no+" ,bankcode:"+bank_code);
+							brcps_helpers.sendSms(receipient_msisdn,brcps_helpers.transactionComplete());
 						}
 						else
 						{
 							//this needs to be logged and send delayed sms
-							System.out.println("failed to move and update transaction");
+							brcps_requests.log.info("!MoveS :: TransactionID:"+transactionId+" ,Msisdn:"+receipient_msisdn+" ,cashout:"+
+									transfer_amount+" ,Account:"+account_no+" ,bankcode:"+bank_code);
 						}
 					}
 					else if(statusCode == HttpStatus.SC_GATEWAY_TIMEOUT)
 					{
-						System.out.println("Http request timeout");
+						brcps_requests.log.info("Http request timeout");
 						//brcps_helpers.sendSms(receipient_msisdn,brcps_helpers.delayTransaction(""+transfer_amount,""+bank_code,""+account_no));
 						//now move that transaction from the pending to the failed transactions
 						int response = brcps_databasequery.moveTransactionToFailed(transactionId, 1);
 						if(response == 1)
 						{
-							System.out.println("successfully moved to failed transactions");
+							brcps_requests.log.info("Failed :: TransactionID:"+transactionId+" ,Msisdn:"+receipient_msisdn+" ,cashout:"+
+									transfer_amount+" ,Account:"+account_no+" ,bankcode:"+bank_code);
 							//send delay sms
 							//brcps_helpers.sendSms(receipient_msisdn,brcps_helpers.delayTransaction(""+transfer_amount,""+bank_code,""+account_no));
 						}
 						else
 						{
+							brcps_requests.log.info("!MoveF :: TransactionID:"+transactionId+" ,Msisdn:"+receipient_msisdn+" ,cashout:"+
+									transfer_amount+" ,Account:"+account_no+" ,bankcode:"+bank_code);
 							//this needs to be logged and send delayed sms
-							System.out.println("failed to move and update transaction");
 							//brcps_helpers.sendSms(receipient_msisdn,brcps_helpers.delayTransaction(""+transfer_amount,""+bank_code,""+account_no));
 						}
 					}
 					else
 					{
-						System.out.println("for some reason it did not go through");
+						brcps_requests.log.info("unknown failure");
 						int response = brcps_databasequery.moveTransactionToFailed(transactionId, 1);
 						if(response == 1)
 						{
-							System.out.println("successfully moved to failed transactions");
+							brcps_requests.log.info("Failed :: TransactionID:"+transactionId+" ,Msisdn:"+receipient_msisdn+" ,cashout:"+
+									transfer_amount+" ,Account:"+account_no+" ,bankcode:"+bank_code);
 							//send delay sms
 							//brcps_helpers.sendSms(receipient_msisdn,brcps_helpers.delayTransaction(""+transfer_amount,""+bank_code,""+account_no));
 						}
 						else
 						{
-							//this needs to be logged and send delayed sms
-							System.out.println("failed to move and update transaction");
+							brcps_requests.log.info("!MoveF :: TransactionID:"+transactionId+" ,Msisdn:"+receipient_msisdn+" ,cashout:"+
+									transfer_amount+" ,Account:"+account_no+" ,bankcode:"+bank_code);
+							
 							//brcps_helpers.sendSms(receipient_msisdn,brcps_helpers.delayTransaction(""+transfer_amount,""+bank_code,""+account_no));
 						}
 					}

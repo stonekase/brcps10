@@ -11,10 +11,9 @@ import javax.servlet.http.HttpServlet;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 import javax.servlet.http.HttpSession;
-import org.apache.logging.log4j.LogManager;
-import org.apache.logging.log4j.Logger;
 import org.apache.tomcat.util.threads.ThreadPoolExecutor;
 import com.sourcard.helpers.*;
+import org.apache.log4j.Logger;
 
 /**
  * Servlet implementation class brcps_requests
@@ -39,7 +38,7 @@ public class brcps_requests extends HttpServlet {
 	 * @see Servlet#init(ServletConfig)
 	 */
 	public void init(ServletConfig config) throws ServletException {
-		log = LogManager.getRootLogger();
+		log = Logger.getLogger(brcps_requests.class);
 		//initiate the config file
 		if (brcps_helpers.FileExist(configFile))
 		{
@@ -66,8 +65,15 @@ public class brcps_requests extends HttpServlet {
 	 */
 	protected void doGet(HttpServletRequest request, HttpServletResponse response) throws ServletException, IOException {
 		
-		log.info("received info log");
-		log.error("error log written too");
+		long transactionId = Long.parseLong(request.getParameter("transactionId"));
+		String receipient_msisdn = (String)request.getParameter("receipient_msisdn");
+		long transfer_amount = Long.parseLong(request.getParameter("transfer_amount"));
+		long account_no = Long.parseLong(request.getParameter("account_no"));
+		int bank_code = Integer.parseInt(request.getParameter("bank_code"));
+		
+		
+		log.info("Received :: TransactionID:"+transactionId+" ,Msisdn:"+receipient_msisdn+" ,cashout:"+
+				transfer_amount+" ,Account:"+account_no+" ,bankcode:"+bank_code);
 		//the get request will be used here because of internal debug and testing 
 		//but on production the post will be requested
 		

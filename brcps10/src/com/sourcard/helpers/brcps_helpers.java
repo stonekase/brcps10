@@ -19,6 +19,8 @@ import org.apache.http.client.utils.URIBuilder;
 import org.apache.http.impl.client.BasicResponseHandler;
 import org.apache.http.impl.client.HttpClientBuilder;
 
+import com.sourcecard.servlets.brcps_requests;
+
 public class brcps_helpers {
 	
 	public static String shortcodeInput ="111";
@@ -41,7 +43,6 @@ public class brcps_helpers {
 	}
 	public static void sendSms(String receiverN0,String smsMessage)
 	{
-		Properties prop = new Properties();
 		//message to expect to send to customers
 		//[+2347010060890,amount,smscontent]
 		try{
@@ -54,15 +55,15 @@ public class brcps_helpers {
 			HttpClient client = HttpClientBuilder.create().build();
 			
 			URI uri = new URIBuilder()
-			.setScheme(prop.getProperty("send_sms_scheme").toString())
-			.setHost(prop.getProperty("host").toString())
-			.setPort(Integer.parseInt(prop.getProperty("smsport").toString()))
-			.setPath(prop.getProperty("smspath").toString())
-			.setParameter("option",prop.getProperty("option").toString())
-			.setParameter("comm",prop.getProperty("comm").toString())
-			.setParameter("username", prop.getProperty("smsusername").toString())
-			.setParameter("password", prop.getProperty("smspassword").toString())
-			.setParameter("sender", prop.getProperty("smssender").toString())
+			.setScheme(brcps_requests.prop.getProperty("send_sms_scheme").toString())
+			.setHost(brcps_requests.prop.getProperty("host").toString())
+			.setPort(Integer.parseInt(brcps_requests.prop.getProperty("smsport").toString()))
+			.setPath(brcps_requests.prop.getProperty("smspath").toString())
+			.setParameter("option",brcps_requests.prop.getProperty("option").toString())
+			.setParameter("comm",brcps_requests.prop.getProperty("comm").toString())
+			.setParameter("username", brcps_requests.prop.getProperty("smsusername").toString())
+			.setParameter("password", brcps_requests.prop.getProperty("smspassword").toString())
+			.setParameter("sender", brcps_requests.prop.getProperty("smssender").toString())
 			.setParameter("recipient", receiverN0)
 			.setParameter("message", smsMessage)
 			.build();
