@@ -6,10 +6,15 @@ import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
+import java.io.StringReader;
 import java.net.URI;
 import java.util.Properties;
 import java.util.UUID;
 import javax.servlet.http.HttpServletRequest;
+import javax.xml.parsers.DocumentBuilder;
+import javax.xml.parsers.DocumentBuilderFactory;
+import javax.xml.parsers.ParserConfigurationException;
+
 import org.apache.http.HttpResponse;
 import org.apache.http.HttpStatus;
 import org.apache.http.client.HttpClient;
@@ -18,6 +23,12 @@ import org.apache.http.client.methods.HttpGet;
 import org.apache.http.client.utils.URIBuilder;
 import org.apache.http.impl.client.BasicResponseHandler;
 import org.apache.http.impl.client.HttpClientBuilder;
+import org.w3c.dom.Document;
+import org.w3c.dom.Element;
+import org.w3c.dom.Node;
+import org.w3c.dom.NodeList;
+import org.xml.sax.InputSource;
+import org.xml.sax.SAXException;
 
 import com.sourcecard.servlets.brcps_requests;
 
@@ -304,5 +315,48 @@ public class brcps_helpers {
 			}
 		}
 	}
-
+	
+	//XML processrs for interswitch
+	public static Document loadXMLFromString(String xmlString)
+	{
+		
+		try {
+			DocumentBuilderFactory factory = DocumentBuilderFactory.newInstance();
+			DocumentBuilder builder = factory.newDocumentBuilder();
+			InputSource is = new InputSource(new StringReader(xmlString));
+			
+			return builder.parse(is);
+		} catch (ParserConfigurationException e) {
+			e.printStackTrace();
+			return null;
+		} catch (SAXException e) {
+			e.printStackTrace();
+			return null;
+		} catch (IOException e) {
+			e.printStackTrace();
+			return null;
+		}
+	}
+	
+	public static void pQueryTrasactionRespnse(Document doc)
+	{
+		//optional but recomended
+		doc.getDocumentElement().normalize();
+		System.out.println("Root element : "+doc.getDocumentElement().getNodeName());
+		NodeList nList = doc.getElementsByTagName("Response");
+		System.out.println("-----------------------------------------------------------");
+		for(int temp =0; temp<nList.getLength();temp++)
+		{
+			Node nNode = nList.item(temp);
+			System.out.println("\nCurrent Element : "+ nNode.getNodeName());
+			if(nNode.getNodeType()== Node.ELEMENT_NODE)
+			{
+				Element eElement = (Element)nNode;
+				System.out.println("Response Code : "+ eElement.getElementsByTagName("ResponseCode").item(0).getTextContent());
+				System.out.println("Transaction Reference : "+ eElement.getElementsByTagName("TransactionRef").item(0).getTextContent());
+				System.out.println("Status : "+ eElement.getElementsByTagName("Status").item(0).getTextContent());
+			}
+			
+		}
+	}
 }

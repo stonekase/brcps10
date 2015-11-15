@@ -36,7 +36,7 @@ public class brcps_asyncrequestprocessor implements Runnable{
 		//now we check if all variables are ok then we send a request to interswitch
 		//on-success we send a request to interswitch(DONE on debug response)
 		//after one gets a success then a confirmation sms is sent to the customer
-		 if(transactionId != 0 && receipient_msisdn != null && transfer_amount !=0)
+		 if(transactionId <= 0 && receipient_msisdn != null && transfer_amount <=0)
 		 {
 			 try {
 					PrintWriter out = asyncCtx.getResponse().getWriter();
