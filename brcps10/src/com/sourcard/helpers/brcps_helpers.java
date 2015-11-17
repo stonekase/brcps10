@@ -301,6 +301,32 @@ public class brcps_helpers {
 			prop.setProperty("param5","");
 			prop.setProperty("param6","");
 			
+			//=====================================
+			prop.setProperty("querytransactionxmlroot", "Response");
+			prop.setProperty("querytransactionparam1","ResponseCode");
+			prop.setProperty("querytransactionparam2","ServiceProviderId");
+			prop.setProperty("querytransactionparam3","TransactionRef");
+			prop.setProperty("querytransactionparam4","RequestReference");
+			prop.setProperty("querytransactionparam5","Status");
+			prop.setProperty("querytransactionparam6","TransactionSet");
+			prop.setProperty("querytransactionparam7","TransactionResponseCode");
+			prop.setProperty("querytransactionparam8","PaymentDate");
+			prop.setProperty("querytransactionparam9","Amount");
+			prop.setProperty("querytransactionparam10","Surcharge");
+			prop.setProperty("querytransactionparam11","CurrencyCode");
+			prop.setProperty("querytransactionparam12","Customer");
+			prop.setProperty("querytransactionparam13","CustomerEmail");
+			prop.setProperty("querytransactionparam14","CustomerMobile");
+			
+			//==============fud transfer info ===============================
+			prop.setProperty("fundstransferparam1","BeneficiaryName");
+			prop.setProperty("fundstransferparam2","BeneficiaryEmail");
+			prop.setProperty("fundstransferparam3","BeneficiaryPhone");
+			prop.setProperty("fundstransferparam4","TerminatingEntityName");
+			prop.setProperty("fundstransferparam5","TerminatingAccountNumber");
+			prop.setProperty("fundstransferparam6","TerminatingAccountType");
+			//=====================================
+			
 			// save properties to project root folder
 			prop.store(output, null);
 		} catch (IOException io) {
@@ -338,12 +364,12 @@ public class brcps_helpers {
 		}
 	}
 	
-	public static void pQueryTrasactionRespnse(Document doc)
+	public static void pQueryTrasactionRespnse(Document doc ,Properties prop)
 	{
 		//optional but recomended
 		doc.getDocumentElement().normalize();
 		System.out.println("Root element : "+doc.getDocumentElement().getNodeName());
-		NodeList nList = doc.getElementsByTagName("Response");
+		NodeList nList = doc.getElementsByTagName(prop.getProperty("querytransactionxmlroot"));
 		System.out.println("-----------------------------------------------------------");
 		for(int temp =0; temp<nList.getLength();temp++)
 		{
@@ -352,9 +378,9 @@ public class brcps_helpers {
 			if(nNode.getNodeType()== Node.ELEMENT_NODE)
 			{
 				Element eElement = (Element)nNode;
-				System.out.println("Response Code : "+ eElement.getElementsByTagName("ResponseCode").item(0).getTextContent());
-				System.out.println("Transaction Reference : "+ eElement.getElementsByTagName("TransactionRef").item(0).getTextContent());
-				System.out.println("Status : "+ eElement.getElementsByTagName("Status").item(0).getTextContent());
+				System.out.println("Response Code : "+ eElement.getElementsByTagName(prop.getProperty("querytransactionparam1")).item(0).getTextContent());
+				System.out.println("Transaction Reference : "+ eElement.getElementsByTagName(prop.getProperty("querytransactionparam3")).item(0).getTextContent());
+				System.out.println("Status : "+ eElement.getElementsByTagName(prop.getProperty("querytransactionparam5")).item(0).getTextContent());
 			}
 			
 		}
