@@ -8,6 +8,9 @@ import java.io.InputStream;
 import java.io.OutputStream;
 import java.io.StringReader;
 import java.net.URI;
+import java.security.MessageDigest;
+import java.util.Enumeration;
+import java.util.Hashtable;
 import java.util.Properties;
 import java.util.UUID;
 import javax.servlet.http.HttpServletRequest;
@@ -382,7 +385,54 @@ public class brcps_helpers {
 				System.out.println("Transaction Reference : "+ eElement.getElementsByTagName(prop.getProperty("querytransactionparam3")).item(0).getTextContent());
 				System.out.println("Status : "+ eElement.getElementsByTagName(prop.getProperty("querytransactionparam5")).item(0).getTextContent());
 			}
-			
 		}
 	}
+	//========================INTERSWITCH XML Helpers===============================
+	private final static Hashtable<String, String> htmlEntitiesTable = new Hashtable<String, String>();
+	static {
+	    htmlEntitiesTable.put("&amp;","&");
+	    htmlEntitiesTable.put("&quot;","\"");
+	    htmlEntitiesTable.put("&lt;","<");
+	    htmlEntitiesTable.put("&gt;",">");
+	    htmlEntitiesTable.put("&#58;",":");
+	    htmlEntitiesTable.put("&#91;","[");
+	    htmlEntitiesTable.put("&#93;","]");
+	    htmlEntitiesTable.put("<?xml version='1.0' encoding='Windows-1252'?>","");
+	}
+
+	private static String decodeHtmlEntityCharacters(String inputString) throws Exception {
+	    Enumeration<String> en = htmlEntitiesTable.keys();
+
+	    while(en.hasMoreElements()){
+	        String key = en.nextElement();
+	        String val = htmlEntitiesTable.get(key);
+
+	        inputString = inputString.replaceAll(key, val);
+	    }
+
+	    return inputString;
+	}
+	
+	public static String get_SHA_512_SecurePassword(String stringToHash)
+	{
+	    String generatedPassword = null;
+	    try {
+
+	        MessageDigest md = MessageDigest.getInstance("SHA-512");
+	       // md.update(salt.getBytes("UTF-8"));
+	        byte[] bytes = md.digest(stringToHash.getBytes("UTF-8"));
+	        StringBuilder sb = new StringBuilder();
+	        for(int i=0; i< bytes.length ;i++)
+	        {
+	            sb.append(Integer.toString((bytes[i] & 0xff) + 0x100, 16).substring(1));
+	        }
+	        generatedPassword = sb.toString();
+	    } 
+	    catch (Exception e) 
+	    {
+	        e.printStackTrace();
+	    }
+	    return generatedPassword;
+	}
+	//=======================================================
 }
