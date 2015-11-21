@@ -328,7 +328,29 @@ public class brcps_helpers {
 			prop.setProperty("fundstransferparam4","TerminatingEntityName");
 			prop.setProperty("fundstransferparam5","TerminatingAccountNumber");
 			prop.setProperty("fundstransferparam6","TerminatingAccountType");
-			//=====================================
+			//==================DoTransfer Variables===================
+			prop.setProperty("InitiatingEntityCode","SCC");
+			prop.setProperty("Lastname","BRCP");
+			prop.setProperty("Othernames","payments");
+			prop.setProperty("Email","oakawo@sourcecard.com.ng");
+			prop.setProperty("Phone","07010060890");
+			prop.setProperty("bLastname","customer");
+			prop.setProperty("bOthernames","brcps");
+			prop.setProperty("bEmail","oakawo@sourcecard.com.ng");
+			prop.setProperty("bPhone","07010060890");
+			prop.setProperty("Channel","7");
+			prop.setProperty("PaymentMethodCode","CA");
+			prop.setProperty("CurrencyCode","566");
+			prop.setProperty("TPaymentMethodCode","AC");
+			prop.setProperty("TCurrencyCode","566");
+			prop.setProperty("CountryCode","NG");
+			prop.setProperty("EntityCode","058");
+			prop.setProperty("AccountType","10");
+			
+			//=====================Mascelleneous Variables=================================
+			prop.setProperty("soapuri","http://services.interswitchng.com/quicktellerservice/");
+			prop.setProperty("soapprefix","quic");
+			
 			
 			// save properties to project root folder
 			prop.store(output, null);

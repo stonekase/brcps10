@@ -1,11 +1,21 @@
 package com.sourcecard.servlets;
 
-import java.io.IOException;
-import java.io.PrintWriter;
+import java.io.StringReader;
+
 import javax.servlet.AsyncContext;
 import javax.servlet.http.HttpSession;
-import org.apache.http.HttpStatus;
-import com.sourcard.helpers.brcps_databasequery;
+import javax.xml.parsers.DocumentBuilder;
+import javax.xml.parsers.DocumentBuilderFactory;
+import javax.xml.soap.MessageFactory;
+import javax.xml.soap.MimeHeaders;
+import javax.xml.soap.SOAPBody;
+import javax.xml.soap.SOAPEnvelope;
+import javax.xml.soap.SOAPMessage;
+import javax.xml.soap.SOAPPart;
+
+import org.w3c.dom.Document;
+import org.xml.sax.InputSource;
+
 import com.sourcard.helpers.brcps_helpers;
 
 public class brcps_asyncrequestprocessor implements Runnable{
@@ -19,6 +29,10 @@ public class brcps_asyncrequestprocessor implements Runnable{
 	int bank_code;
 	//transaction tag
 	final String USER = "brcps";
+	
+	//DoTransfer Parameters
+	String MAC,TransferCode,Amount,TAmount,AccountNumber;
+	
 	
 	public brcps_asyncrequestprocessor(AsyncContext asyncCtx,HttpSession session) {
 		this.asyncCtx = asyncCtx;
@@ -36,71 +50,96 @@ public class brcps_asyncrequestprocessor implements Runnable{
 		//now we check if all variables are ok then we send a request to interswitch
 		//on-success we send a request to interswitch(DONE on debug response)
 		//after one gets a success then a confirmation sms is sent to the customer
-		 if(transactionId <= 0 && receipient_msisdn != null && transfer_amount <=0)
+		 if(transactionId > 0 && receipient_msisdn != null && transfer_amount > 0)
 		 {
-			 try {
-					PrintWriter out = asyncCtx.getResponse().getWriter();
-					int statusCode = HttpStatus.SC_OK; //brcps_helpers.sendRequestFunding(transactionId, receipient_msisdn, transfer_amount);
-					if (statusCode == HttpStatus.SC_OK)
-					{
-						int response = brcps_databasequery.moveTransactionToPassed(transactionId, 0);
-						if(response == 1)
-						{
-							brcps_requests.log.info("Success :: TransactionID:"+transactionId+" ,Msisdn:"+receipient_msisdn+" ,cashout:"+
-									transfer_amount+" ,Account:"+account_no+" ,bankcode:"+bank_code);
-							brcps_helpers.sendSms(receipient_msisdn,brcps_helpers.transactionComplete());
-						}
-						else
-						{
-							//this needs to be logged and send delayed sms
-							brcps_requests.log.info("!MoveS :: TransactionID:"+transactionId+" ,Msisdn:"+receipient_msisdn+" ,cashout:"+
-									transfer_amount+" ,Account:"+account_no+" ,bankcode:"+bank_code);
-						}
-					}
-					else if(statusCode == HttpStatus.SC_GATEWAY_TIMEOUT)
-					{
-						brcps_requests.log.info("Http request timeout");
-						//brcps_helpers.sendSms(receipient_msisdn,brcps_helpers.delayTransaction(""+transfer_amount,""+bank_code,""+account_no));
-						//now move that transaction from the pending to the failed transactions
-						int response = brcps_databasequery.moveTransactionToFailed(transactionId, 1);
-						if(response == 1)
-						{
-							brcps_requests.log.info("Failed :: TransactionID:"+transactionId+" ,Msisdn:"+receipient_msisdn+" ,cashout:"+
-									transfer_amount+" ,Account:"+account_no+" ,bankcode:"+bank_code);
-							//send delay sms
-							//brcps_helpers.sendSms(receipient_msisdn,brcps_helpers.delayTransaction(""+transfer_amount,""+bank_code,""+account_no));
-						}
-						else
-						{
-							brcps_requests.log.info("!MoveF :: TransactionID:"+transactionId+" ,Msisdn:"+receipient_msisdn+" ,cashout:"+
-									transfer_amount+" ,Account:"+account_no+" ,bankcode:"+bank_code);
-							//this needs to be logged and send delayed sms
-							//brcps_helpers.sendSms(receipient_msisdn,brcps_helpers.delayTransaction(""+transfer_amount,""+bank_code,""+account_no));
-						}
-					}
-					else
-					{
-						brcps_requests.log.info("unknown failure");
-						int response = brcps_databasequery.moveTransactionToFailed(transactionId, 1);
-						if(response == 1)
-						{
-							brcps_requests.log.info("Failed :: TransactionID:"+transactionId+" ,Msisdn:"+receipient_msisdn+" ,cashout:"+
-									transfer_amount+" ,Account:"+account_no+" ,bankcode:"+bank_code);
-							//send delay sms
-							//brcps_helpers.sendSms(receipient_msisdn,brcps_helpers.delayTransaction(""+transfer_amount,""+bank_code,""+account_no));
-						}
-						else
-						{
-							brcps_requests.log.info("!MoveF :: TransactionID:"+transactionId+" ,Msisdn:"+receipient_msisdn+" ,cashout:"+
-									transfer_amount+" ,Account:"+account_no+" ,bankcode:"+bank_code);
-							
-							//brcps_helpers.sendSms(receipient_msisdn,brcps_helpers.delayTransaction(""+transfer_amount,""+bank_code,""+account_no));
-						}
-					}
-				} catch (IOException e) {
-					e.printStackTrace();
-				}
-			asyncCtx.complete();
+			 
+			 asyncCtx.complete();
 		 }
 	}
+	private SOAPMessage doTransferDocument(String amount) throws Exception
+    {
+		String soapuri = brcps_requests.prop.getProperty("soapuri");
+		String soapPrefix = brcps_requests.prop.getProperty("soapprefix");
+		
+		String sha = ""+amount+brcps_requests.prop.getProperty("CurrencyCode").trim().toString()+
+				brcps_requests.prop.getProperty("PaymentMethodCode").trim().toString()+amount+
+				brcps_requests.prop.getProperty("TCurrencyCode").trim().toString()+	
+				brcps_requests.prop.getProperty("TPaymentMethodCode").trim().toString()+
+				brcps_requests.prop.getProperty("CountryCode").trim().toString();
+		
+		this.MAC = brcps_helpers.get_SHA_512_SecurePassword(sha);
+		
+		String xml =
+				 "<quic:DoTransfer xmlns:quic='http://services.interswitchng.com/quicktellerservice/'>"
+				 +"<!--Optional:-->"
+				 +"<quic:xmlParams>"
+				 +"<![CDATA[<RequestDetails>"
+				 +"<InitiatingEntityCode>SCC</InitiatingEntityCode>"
+				 +"<MAC>"+MAC+"</MAC>"
+				 +"<TransferCode>"+transactionId+"</TransferCode>"
+				 +"<Sender>"
+				 +"<Lastname>"+brcps_requests.prop.getProperty("Lastname").trim().toString()+"</Lastname>"
+				 +"<Othernames>"+brcps_requests.prop.getProperty("Othernames").trim().toString()+"</Othernames>"
+				 +"<Email>"+brcps_requests.prop.getProperty("Email").trim().toString()+"</Email>"
+				 +"<Phone>"+brcps_requests.prop.getProperty("Phone").trim().toString()+"</Phone>"
+				 +"</Sender>"
+				 +"<Beneficiary>"
+				 +"<Lastname>"+brcps_requests.prop.getProperty("bLastname").trim().toString()+"</Lastname>"
+				 +"<Othernames>"+brcps_requests.prop.getProperty("bOthernames").trim().toString()+"</Othernames>"
+				 +"<Email>"+brcps_requests.prop.getProperty("bEmail").trim().toString()+"</Email>"
+				 +"<Phone>"+brcps_requests.prop.getProperty("bPhone").trim().toString()+"</Phone>"
+				 +"</Beneficiary>"
+				 +"<Initiation>"
+				 +"<Amount>"+amount+"</Amount>"
+				 +"<Channel>"+brcps_requests.prop.getProperty("Channel").trim().toString()+"</Channel>"
+				 +"<PaymentMethodCode>"+brcps_requests.prop.getProperty("PaymentMethodCode").trim().toString()+"</PaymentMethodCode>"
+				 +"<CurrencyCode>"+brcps_requests.prop.getProperty("CurrencyCode").trim().toString()+"</CurrencyCode>"
+				 +"<Processor>"
+				 +"<Lastname></Lastname>"
+				 +"<Othernames></Othernames>"
+				 +"</Processor>"
+				 +"<DepositSlip></DepositSlip>"
+				 +"</Initiation>"
+				 +"<Termination>"
+				 +"<PaymentMethodCode>"+brcps_requests.prop.getProperty("TPaymentMethodCode").trim().toString()+"</PaymentMethodCode>"
+				 +"<Amount>"+amount+"</Amount>"
+				 +"<CurrencyCode>"+brcps_requests.prop.getProperty("TCurrencyCode").trim().toString()+"</CurrencyCode>"
+				 +"<CountryCode>"+brcps_requests.prop.getProperty("CountryCode").trim().toString()+"</CountryCode>"
+				 +"<EntityCode>"+brcps_requests.prop.getProperty("EntityCode").trim().toString()+"</EntityCode>"
+				 +"<AccountReceivable>"
+				 +"<AccountNumber>"+account_no+"</AccountNumber>"
+				 +"<AccountType>"+brcps_requests.prop.getProperty("AccountType").trim().toString()+"</AccountType>"
+				 +"</AccountReceivable>"
+				 +"</Termination>"
+				 +"</RequestDetails>]]></quic:xmlParams>"
+				 +"</quic:DoTransfer>";
+		
+		DocumentBuilderFactory factory = DocumentBuilderFactory.newInstance();
+	     factory.setNamespaceAware(true);
+	     DocumentBuilder builder = factory.newDocumentBuilder();
+	     Document doc = builder.parse(new InputSource(new StringReader(xml)));
+	     
+	     SOAPMessage message = MessageFactory.newInstance().createMessage();
+	     message.setProperty(SOAPMessage.CHARACTER_SET_ENCODING, "UTF-8");
+	     SOAPPart soapPart = message.getSOAPPart();
+	     
+		 //SOAP Envelop
+		 SOAPEnvelope envelope = soapPart.getEnvelope();
+		// envelope.setPrefix("soapenv");
+		 //envelope.addNamespaceDeclaration("soapenv","http://schemas.xmlsoap.org/soap/envelope/");
+		 envelope.addNamespaceDeclaration(soapPrefix,soapuri );
+		 
+	     SOAPBody body = envelope.getBody();
+	    // body.setPrefix("soapenv");
+	     body.addDocument(doc);
+	     
+	     MimeHeaders headers = message.getMimeHeaders();
+		 headers.addHeader("SOAPAction",  "QueryTransaction");
+	     //headers.addHeader("SOAPAction",  "DoTransfer");
+	     message.saveChanges();
+	     message.writeTo(System.out);
+		
+		return message;
+	}
+	
 }

@@ -1,6 +1,6 @@
 package com.sourcard.helpers;
 
-public class InterswitchDotransfer {
+public class InterswitchDotransferResponse {
 	
 	private String ResponseCode,
 	MAC,
