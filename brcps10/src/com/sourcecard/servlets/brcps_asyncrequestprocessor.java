@@ -52,7 +52,6 @@ public class brcps_asyncrequestprocessor implements Runnable{
 		//after one gets a success then a confirmation sms is sent to the customer
 		 if(transactionId > 0 && receipient_msisdn != null && transfer_amount > 0)
 		 {
-			 
 			 asyncCtx.complete();
 		 }
 	}
@@ -134,8 +133,8 @@ public class brcps_asyncrequestprocessor implements Runnable{
 	     body.addDocument(doc);
 	     
 	     MimeHeaders headers = message.getMimeHeaders();
-		 headers.addHeader("SOAPAction",  "QueryTransaction");
-	     //headers.addHeader("SOAPAction",  "DoTransfer");
+		 //headers.addHeader("SOAPAction",  "QueryTransaction");
+	     headers.addHeader("SOAPAction",  "DoTransfer");
 	     message.saveChanges();
 	     message.writeTo(System.out);
 		
