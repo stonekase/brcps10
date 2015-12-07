@@ -103,7 +103,7 @@ public class brcps_requests extends HttpServlet {
 		
 		AsyncContext asyncCtx = request.startAsync();
 	    //the timeout is set to be large but will be pulled from the config file
-		asyncCtx.setTimeout(30000);
+		asyncCtx.setTimeout(100000);
 		asyncCtx.addListener(new brcps_asynclistener());
 		
 		//getting the request and setting them up

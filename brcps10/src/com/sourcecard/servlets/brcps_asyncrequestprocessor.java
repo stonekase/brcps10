@@ -28,6 +28,9 @@ import javax.xml.transform.TransformerFactory;
 import javax.xml.transform.stream.StreamResult;
 
 import org.w3c.dom.Document;
+import org.w3c.dom.Element;
+import org.w3c.dom.Node;
+import org.w3c.dom.NodeList;
 import org.xml.sax.InputSource;
 import com.sourcard.helpers.SoapRunnable;
 import com.sourcard.helpers.brcps_helpers;
@@ -80,7 +83,7 @@ public class brcps_asyncrequestprocessor implements Runnable{
 			    future = executor.submit(new SoapRunnable(soapConnection,
 			    		brcps_requests.prop.getProperty("soapurl").trim().toString(),
 			    		doTransferDocument(""+transfer_amount)));
-				 SOAPMessage soapResponse = future.get(15, TimeUnit.SECONDS);
+				 SOAPMessage soapResponse = future.get(90, TimeUnit.SECONDS);
 				 printSOAPResponse( soapResponse);
 				 
 				 
@@ -136,6 +139,48 @@ public class brcps_asyncrequestprocessor implements Runnable{
 		
 		Charset.forName("UTF-8").encode(xmlString);
 		System.out.println(xmlString);
+		try
+		{
+			Document doc  = brcps_helpers.loadXMLFromString(xmlString);
+			//File fXmlFile = new File("xmltt.xml");
+			//File fXmlFile = new File("dotransferresponse.xml");
+			//DocumentBuilderFactory dbFactory = DocumentBuilderFactory.newInstance();
+			//DocumentBuilder dBuilder = dbFactory.newDocumentBuilder();
+			//Document doc = dBuilder.parse(fXmlFile);
+			
+			//optional but recomended
+			doc.getDocumentElement().normalize();
+			System.out.println("Root element : "+doc.getDocumentElement().getNodeName());
+			NodeList nList = doc.getElementsByTagName("Response");
+			System.out.println("-----------------------------------------------------------");
+			for(int temp =0; temp<nList.getLength();temp++)
+			{
+				Node nNode = nList.item(temp);
+				System.out.println("\nCurrent Element : "+ nNode.getNodeName());
+				if(nNode.getNodeType()== Node.ELEMENT_NODE)
+				{
+					Element eElement = (Element)nNode;
+					/*System.out.println("Response Code : "+ eElement.getElementsByTagName("ResponseCode").item(0).getTextContent());
+					System.out.println("Service Provider ID : "+ eElement.getElementsByTagName("ServiceProviderId").item(0).getTextContent());
+					System.out.println("Transaction Reference : "+ eElement.getElementsByTagName("TransactionRef").item(0).getTextContent());
+					System.out.println("Request Reference : "+ eElement.getElementsByTagName("RequestReference").item(0).getTextContent());
+					System.out.println("Status : "+ eElement.getElementsByTagName("Status").item(0).getTextContent());
+					System.out.println("Empty : "+ eElement.getElementsByTagName("").item(0).getTextContent());*/
+					
+					System.out.println("Response Code : "+ eElement.getElementsByTagName("ResponseCode").item(0).getTextContent());
+					System.out.println("MAC : "+ eElement.getElementsByTagName("MAC").item(0).getTextContent());
+					System.out.println("Transaction Reference : "+ eElement.getElementsByTagName("TransactionReference").item(0).getTextContent());
+					System.out.println("Transaction Date : "+ eElement.getElementsByTagName("TransactionDate").item(0).getTextContent());
+					System.out.println("Transfer Code : "+ eElement.getElementsByTagName("TransferCode").item(0).getTextContent());
+					
+				}
+				
+			}
+		}
+		catch(Exception ex)
+		{
+			
+		}
 	}
 	private SOAPMessage doTransferDocument(String amount) throws Exception
     {
