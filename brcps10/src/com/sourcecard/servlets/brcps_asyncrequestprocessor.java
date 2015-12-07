@@ -1,7 +1,14 @@
 package com.sourcecard.servlets;
 
 import java.io.StringReader;
-
+import java.io.StringWriter;
+import java.nio.charset.Charset;
+import java.util.concurrent.ExecutionException;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
+import java.util.concurrent.Future;
+import java.util.concurrent.TimeUnit;
+import java.util.concurrent.TimeoutException;
 import javax.servlet.AsyncContext;
 import javax.servlet.http.HttpSession;
 import javax.xml.parsers.DocumentBuilder;
@@ -9,13 +16,20 @@ import javax.xml.parsers.DocumentBuilderFactory;
 import javax.xml.soap.MessageFactory;
 import javax.xml.soap.MimeHeaders;
 import javax.xml.soap.SOAPBody;
+import javax.xml.soap.SOAPConnection;
+import javax.xml.soap.SOAPConnectionFactory;
 import javax.xml.soap.SOAPEnvelope;
+import javax.xml.soap.SOAPException;
 import javax.xml.soap.SOAPMessage;
 import javax.xml.soap.SOAPPart;
+import javax.xml.transform.Source;
+import javax.xml.transform.Transformer;
+import javax.xml.transform.TransformerFactory;
+import javax.xml.transform.stream.StreamResult;
 
 import org.w3c.dom.Document;
 import org.xml.sax.InputSource;
-
+import com.sourcard.helpers.SoapRunnable;
 import com.sourcard.helpers.brcps_helpers;
 
 public class brcps_asyncrequestprocessor implements Runnable{
@@ -37,11 +51,12 @@ public class brcps_asyncrequestprocessor implements Runnable{
 	public brcps_asyncrequestprocessor(AsyncContext asyncCtx,HttpSession session) {
 		this.asyncCtx = asyncCtx;
 		this.session = session;
-		this.transactionId = Long.parseLong(asyncCtx.getRequest().getParameter("transactionId"));
+		this.transactionId = Long.parseLong(brcps_requests.prop.getProperty("requestprefix").trim().toString()+asyncCtx.getRequest().getParameter("transactionId"));
 		this.receipient_msisdn = (String)asyncCtx.getRequest().getParameter("receipient_msisdn");
 		this.transfer_amount = Long.parseLong(asyncCtx.getRequest().getParameter("transfer_amount"));
 		this.account_no = Long.parseLong(asyncCtx.getRequest().getParameter("account_no"));
 		this.bank_code = Integer.parseInt(asyncCtx.getRequest().getParameter("bank_code"));
+		 
 	}
 	@Override
 	public void run() 
@@ -50,10 +65,77 @@ public class brcps_asyncrequestprocessor implements Runnable{
 		//now we check if all variables are ok then we send a request to interswitch
 		//on-success we send a request to interswitch(DONE on debug response)
 		//after one gets a success then a confirmation sms is sent to the customer
+		Future<SOAPMessage> future = null;
 		 if(transactionId > 0 && receipient_msisdn != null && transfer_amount > 0)
 		 {
+			 brcps_requests.log.info("Received :: TransactionID:"+transactionId+" ,Msisdn:"+receipient_msisdn+" ,cashout:"+
+						transfer_amount+" ,Account:"+account_no+" ,bankcode:"+bank_code);
+			
+			try {
+				SOAPConnectionFactory soapConnectionFactory = SOAPConnectionFactory.newInstance();
+				SOAPConnection soapConnection = soapConnectionFactory.createConnection();
+				//long startTime = System.currentTimeMillis();
+				
+				ExecutorService executor = Executors.newSingleThreadExecutor();
+			    future = executor.submit(new SoapRunnable(soapConnection,
+			    		brcps_requests.prop.getProperty("soapurl").trim().toString(),
+			    		doTransferDocument(""+transfer_amount)));
+				 SOAPMessage soapResponse = future.get(15, TimeUnit.SECONDS);
+				 printSOAPResponse( soapResponse);
+				 
+				 
+				/*// long elapsedTime = System.currentTimeMillis() - startTime;
+				 //convert soap message to a string 
+				String doTransferResString = brcps_helpers.ProcessDoTransferSoapMessageToString(soapResponse);
+				//convert the soapmessage string to a Document file
+				Document doTransferResDoc = brcps_helpers.loadXMLFromString(doTransferResString);
+				//process and load the xml document into a getter setter for use by the application
+				brcps_helpers.pDoTrasactionRespnse(doTransferResDoc ,brcps_requests.prop);*/
+				
+			} catch (UnsupportedOperationException | SOAPException e) {
+				// TODO Auto-generated catch block
+				e.printStackTrace();
+			} catch (InterruptedException e) {
+				// TODO Auto-generated catch block
+				e.printStackTrace();
+			} catch (ExecutionException e) {
+				e.printStackTrace();
+			} catch (TimeoutException e) {
+				e.printStackTrace();
+			} catch (Exception e) {
+				e.printStackTrace();
+			}
 			 asyncCtx.complete();
 		 }
+		 else
+		 {
+			 //i will log the null transactions as an error
+			 brcps_requests.log.error("Received :: TransactionID:"+transactionId+" ,Msisdn:"+receipient_msisdn+" ,cashout:"+
+						transfer_amount+" ,Account:"+account_no+" ,bankcode:"+bank_code);
+		 }
+	}
+	
+	/** message used to print the SOAP Response */
+	private static void printSOAPResponse(SOAPMessage soapResponse) throws Exception
+	{
+		TransformerFactory transformerFactory = TransformerFactory.newInstance();
+		Transformer transformer = transformerFactory.newTransformer();
+		
+		Source sourceContent = soapResponse.getSOAPPart().getContent();
+		System.out.print("\nResponse SOAP Message = ");
+		//StreamResult result = new StreamResult(System.out);
+		StreamResult result = new StreamResult(new StringWriter());
+		transformer.transform(sourceContent, result);
+		String xmlString = result.getWriter().toString();
+		
+		xmlString = brcps_helpers.decodeHtmlEntityCharacters(xmlString);
+		String removeMe = "<?xml version="+"\"1.0\""+" encoding="+"\"Windows-1252\""+"?>";
+		System.out.println(removeMe);
+		
+		xmlString =xmlString.replace(removeMe, "");
+		
+		Charset.forName("UTF-8").encode(xmlString);
+		System.out.println(xmlString);
 	}
 	private SOAPMessage doTransferDocument(String amount) throws Exception
     {

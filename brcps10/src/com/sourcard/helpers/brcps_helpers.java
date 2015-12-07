@@ -7,7 +7,9 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
 import java.io.StringReader;
+import java.io.StringWriter;
 import java.net.URI;
+import java.nio.charset.Charset;
 import java.security.MessageDigest;
 import java.util.Enumeration;
 import java.util.Hashtable;
@@ -17,6 +19,14 @@ import javax.servlet.http.HttpServletRequest;
 import javax.xml.parsers.DocumentBuilder;
 import javax.xml.parsers.DocumentBuilderFactory;
 import javax.xml.parsers.ParserConfigurationException;
+import javax.xml.soap.SOAPException;
+import javax.xml.soap.SOAPMessage;
+import javax.xml.transform.Source;
+import javax.xml.transform.Transformer;
+import javax.xml.transform.TransformerConfigurationException;
+import javax.xml.transform.TransformerException;
+import javax.xml.transform.TransformerFactory;
+import javax.xml.transform.stream.StreamResult;
 
 import org.apache.http.HttpResponse;
 import org.apache.http.HttpStatus;
@@ -181,7 +191,6 @@ public class brcps_helpers {
 	//check if file exist
 	public static boolean FileExist(String filepath)
 	{
-		
 		File f = new File(filepath);
 		 
 		  if(f.exists()){
@@ -329,6 +338,7 @@ public class brcps_helpers {
 			prop.setProperty("fundstransferparam5","TerminatingAccountNumber");
 			prop.setProperty("fundstransferparam6","TerminatingAccountType");
 			//==================DoTransfer Variables===================
+			prop.setProperty("requestprefix","1343");
 			prop.setProperty("InitiatingEntityCode","SCC");
 			prop.setProperty("Lastname","BRCP");
 			prop.setProperty("Othernames","payments");
@@ -349,9 +359,17 @@ public class brcps_helpers {
 			
 			//=====================Mascelleneous Variables=================================
 			prop.setProperty("soapuri","http://services.interswitchng.com/quicktellerservice/");
+			prop.setProperty("soapurl","https://stageserv.interswitchng.com/uat_QuickTellerService/QuickTeller.svc");
 			prop.setProperty("soapprefix","quic");
 			
-			
+			//=======================DoTransfer Response ======================================================
+			prop.setProperty("dotransactionxmlroot", "Response");
+			prop.setProperty("dotransactionparam1","ResponseCode");
+			prop.setProperty("dotransactionparam2","MAC");
+			prop.setProperty("dotransactionparam3","TransactionReference");
+			prop.setProperty("dotransactionparam4","TransactionDate");
+			prop.setProperty("dotransactionparam5","TransferCode");
+			//=================================================================================================
 			// save properties to project root folder
 			prop.store(output, null);
 		} catch (IOException io) {
@@ -370,7 +388,7 @@ public class brcps_helpers {
 	//XML processrs for interswitch
 	public static Document loadXMLFromString(String xmlString)
 	{
-		
+		//problem arose from here
 		try {
 			DocumentBuilderFactory factory = DocumentBuilderFactory.newInstance();
 			DocumentBuilder builder = factory.newDocumentBuilder();
@@ -409,6 +427,30 @@ public class brcps_helpers {
 			}
 		}
 	}
+	
+	public static void pDoTrasactionRespnse(Document doc ,Properties prop)
+	{
+		//optional but recomended
+		doc.getDocumentElement().normalize();
+		System.out.println("Root element : "+doc.getDocumentElement().getNodeName());
+		NodeList nList = doc.getElementsByTagName(prop.getProperty("dotransactionxmlroot"));
+		System.out.println("-----------------------------------------------------------");
+		for(int temp =0; temp<nList.getLength();temp++)
+		{
+			Node nNode = nList.item(temp);
+			System.out.println("\nCurrent Element : "+ nNode.getNodeName());
+			if(nNode.getNodeType()== Node.ELEMENT_NODE)
+			{
+				Element eElement = (Element)nNode;
+				System.out.println("Response Code : "+ eElement.getElementsByTagName(prop.getProperty("dotransactionparam1")).item(0).getTextContent());
+				System.out.println("MAC : "+ eElement.getElementsByTagName(prop.getProperty("dotransactionparam2")).item(0).getTextContent());
+				System.out.println("TransactionReference : "+ eElement.getElementsByTagName(prop.getProperty("dotransactionparam3")).item(0).getTextContent());
+				System.out.println("TransactionDate : "+ eElement.getElementsByTagName(prop.getProperty("dotransactionparam4")).item(0).getTextContent());
+				System.out.println("TransferCode : "+ eElement.getElementsByTagName(prop.getProperty("dotransactionparam5")).item(0).getTextContent());
+				
+			}
+		}
+	}
 	//========================INTERSWITCH XML Helpers===============================
 	private final static Hashtable<String, String> htmlEntitiesTable = new Hashtable<String, String>();
 	static {
@@ -419,10 +461,10 @@ public class brcps_helpers {
 	    htmlEntitiesTable.put("&#58;",":");
 	    htmlEntitiesTable.put("&#91;","[");
 	    htmlEntitiesTable.put("&#93;","]");
-	    htmlEntitiesTable.put("<?xml version='1.0' encoding='Windows-1252'?>","");
+	    htmlEntitiesTable.put("&#61;","=");
 	}
 
-	private static String decodeHtmlEntityCharacters(String inputString) throws Exception {
+	public static String decodeHtmlEntityCharacters(String inputString) throws Exception {
 	    Enumeration<String> en = htmlEntitiesTable.keys();
 
 	    while(en.hasMoreElements()){
@@ -457,4 +499,34 @@ public class brcps_helpers {
 	    return generatedPassword;
 	}
 	//=======================================================
+	public static String ProcessDoTransferSoapMessageToString(SOAPMessage soapResponse)
+	{
+		String xmlstring = null;
+		
+		try {
+			TransformerFactory transformerFactory = TransformerFactory.newInstance();
+			Transformer transformer = transformerFactory.newTransformer();
+			Source sourceContent = soapResponse.getSOAPPart().getContent();
+			System.out.print("\nResponse SOAP Message = ");
+			//StreamResult result = new StreamResult(System.out);
+			StreamResult result = new StreamResult(new StringWriter());
+			transformer.transform(sourceContent, result);
+			xmlstring = result.getWriter().toString();
+			xmlstring = decodeHtmlEntityCharacters(xmlstring);
+			String removeMe = "<?xml version="+"\"1.0\""+" encoding="+"\"Windows-1252\""+"?>";
+			System.out.println(removeMe);
+			xmlstring =xmlstring.replace(removeMe, ""); 
+			Charset.forName("UTF-8").encode(xmlstring);
+			
+		} catch (TransformerConfigurationException e) {
+			e.printStackTrace();
+		} catch (SOAPException e) {
+			e.printStackTrace();
+		} catch (TransformerException e) {
+			e.printStackTrace();
+		} catch (Exception e) {
+			e.printStackTrace();
+		}
+		return xmlstring;
+	}
 }
