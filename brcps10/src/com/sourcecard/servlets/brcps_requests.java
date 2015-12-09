@@ -27,6 +27,8 @@ public class brcps_requests extends HttpServlet {
 	private String configFile = "C:\\brcps_config.conf";
 	public static Logger log = null;
 	
+	long currentTransactionID,previousTransactionID;
+	
     /**
      * @see HttpServlet#HttpServlet()
      */
@@ -70,7 +72,7 @@ public class brcps_requests extends HttpServlet {
 		long transfer_amount = Long.parseLong(request.getParameter("transfer_amount"));
 		long account_no = Long.parseLong(request.getParameter("account_no"));
 		int bank_code = Integer.parseInt(request.getParameter("bank_code"));
-		
+		this.currentTransactionID = transactionId;
 		
 		log.info("Received :: TransactionID:"+transactionId+" ,Msisdn:"+receipient_msisdn+" ,cashout:"+
 				transfer_amount+" ,Account:"+account_no+" ,bankcode:"+bank_code);
@@ -87,14 +89,15 @@ public class brcps_requests extends HttpServlet {
 		
 		//check if it is aa valid http request
 		// http://localhost:9999/InterswitchDispatcher/BRCPS_DispatchServlet?transactionId=1561909139&receipient_msisdn=347010060890&transfer_amount=43
-		if(brcps_helpers.IsValidRequestParameters(request))
+		if(brcps_helpers.IsValidRequestParameters(request)&& this.currentTransactionID != this.previousTransactionID)
 		{
+			this.previousTransactionID = this.currentTransactionID;
 			verifyCustomerSubscription(request,response,session);
 		}
 		else
 		{
 			PrintWriter out = response.getWriter();
-			out.println("Sorry wrong request");
+			out.println("Sorry wrong or duplicate request");
 		}
 		
 	}

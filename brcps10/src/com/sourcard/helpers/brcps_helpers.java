@@ -363,6 +363,10 @@ public class brcps_helpers {
 			prop.setProperty("soapprefix","quic");
 			
 			//=======================DoTransfer Response ======================================================
+			//replaceme--this variable should be left as an empty string
+			prop.setProperty("successcode", "9000");
+			prop.setProperty("replaceme", "");
+			prop.setProperty("xmlremoveme","<?xml version="+"\"1.0\""+" encoding="+"\"utf-8\""+" ?>");
 			prop.setProperty("dotransactionxmlroot", "Response");
 			prop.setProperty("dotransactionparam1","ResponseCode");
 			prop.setProperty("dotransactionparam2","MAC");
@@ -428,17 +432,18 @@ public class brcps_helpers {
 		}
 	}
 	
-	public static void pDoTrasactionRespnse(Document doc ,Properties prop)
+	public static Node pDoTrasactionRespnse(Document doc ,Properties prop)
 	{
 		//optional but recomended
 		doc.getDocumentElement().normalize();
 		System.out.println("Root element : "+doc.getDocumentElement().getNodeName());
 		NodeList nList = doc.getElementsByTagName(prop.getProperty("dotransactionxmlroot"));
 		System.out.println("-----------------------------------------------------------");
+		Node nNode = null;
 		for(int temp =0; temp<nList.getLength();temp++)
 		{
-			Node nNode = nList.item(temp);
-			System.out.println("\nCurrent Element : "+ nNode.getNodeName());
+			nNode = nList.item(temp);
+			/*System.out.println("\nCurrent Element : "+ nNode.getNodeName());
 			if(nNode.getNodeType()== Node.ELEMENT_NODE)
 			{
 				Element eElement = (Element)nNode;
@@ -448,8 +453,9 @@ public class brcps_helpers {
 				System.out.println("TransactionDate : "+ eElement.getElementsByTagName(prop.getProperty("dotransactionparam4")).item(0).getTextContent());
 				System.out.println("TransferCode : "+ eElement.getElementsByTagName(prop.getProperty("dotransactionparam5")).item(0).getTextContent());
 				
-			}
+			}*/
 		}
+		return nNode;
 	}
 	//========================INTERSWITCH XML Helpers===============================
 	private final static Hashtable<String, String> htmlEntitiesTable = new Hashtable<String, String>();
@@ -513,9 +519,10 @@ public class brcps_helpers {
 			transformer.transform(sourceContent, result);
 			xmlstring = result.getWriter().toString();
 			xmlstring = decodeHtmlEntityCharacters(xmlstring);
-			String removeMe = "<?xml version="+"\"1.0\""+" encoding="+"\"Windows-1252\""+"?>";
+			//String removeMe = "<?xml version="+"\"1.0\""+" encoding="+"\"Windows-1252\""+"?>";
+			String removeMe = prop.getProperty("xmlremoveme").toString();
 			System.out.println(removeMe);
-			xmlstring =xmlstring.replace(removeMe, ""); 
+			xmlstring =xmlstring.replace(removeMe, prop.getProperty("replaceme").toString()); 
 			Charset.forName("UTF-8").encode(xmlstring);
 			
 		} catch (TransformerConfigurationException e) {

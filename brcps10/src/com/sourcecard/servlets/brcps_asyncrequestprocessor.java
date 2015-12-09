@@ -1,8 +1,6 @@
 package com.sourcecard.servlets;
 
 import java.io.StringReader;
-import java.io.StringWriter;
-import java.nio.charset.Charset;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
@@ -22,16 +20,12 @@ import javax.xml.soap.SOAPEnvelope;
 import javax.xml.soap.SOAPException;
 import javax.xml.soap.SOAPMessage;
 import javax.xml.soap.SOAPPart;
-import javax.xml.transform.Source;
-import javax.xml.transform.Transformer;
-import javax.xml.transform.TransformerFactory;
-import javax.xml.transform.stream.StreamResult;
-
 import org.w3c.dom.Document;
 import org.w3c.dom.Element;
 import org.w3c.dom.Node;
-import org.w3c.dom.NodeList;
 import org.xml.sax.InputSource;
+
+import com.sourcard.helpers.InterswitchDotransferResponse;
 import com.sourcard.helpers.SoapRunnable;
 import com.sourcard.helpers.brcps_helpers;
 
@@ -54,7 +48,7 @@ public class brcps_asyncrequestprocessor implements Runnable{
 	public brcps_asyncrequestprocessor(AsyncContext asyncCtx,HttpSession session) {
 		this.asyncCtx = asyncCtx;
 		this.session = session;
-		this.transactionId = Long.parseLong(brcps_requests.prop.getProperty("requestprefix").trim().toString()+asyncCtx.getRequest().getParameter("transactionId"));
+		this.transactionId = Long.parseLong(asyncCtx.getRequest().getParameter("transactionId"));
 		this.receipient_msisdn = (String)asyncCtx.getRequest().getParameter("receipient_msisdn");
 		this.transfer_amount = Long.parseLong(asyncCtx.getRequest().getParameter("transfer_amount"));
 		this.account_no = Long.parseLong(asyncCtx.getRequest().getParameter("account_no"));
@@ -64,6 +58,7 @@ public class brcps_asyncrequestprocessor implements Runnable{
 	@Override
 	public void run() 
 	{
+		InterswitchDotransferResponse dTransfer  = new InterswitchDotransferResponse();
 		System.out.println("beginning to run");
 		//now we check if all variables are ok then we send a request to interswitch
 		//on-success we send a request to interswitch(DONE on debug response)
@@ -83,17 +78,43 @@ public class brcps_asyncrequestprocessor implements Runnable{
 			    future = executor.submit(new SoapRunnable(soapConnection,
 			    		brcps_requests.prop.getProperty("soapurl").trim().toString(),
 			    		doTransferDocument(""+transfer_amount)));
+			    
 				 SOAPMessage soapResponse = future.get(90, TimeUnit.SECONDS);
-				 printSOAPResponse( soapResponse);
-				 
-				 
-				/*// long elapsedTime = System.currentTimeMillis() - startTime;
+				// long elapsedTime = System.currentTimeMillis() - startTime;
 				 //convert soap message to a string 
 				String doTransferResString = brcps_helpers.ProcessDoTransferSoapMessageToString(soapResponse);
 				//convert the soapmessage string to a Document file
 				Document doTransferResDoc = brcps_helpers.loadXMLFromString(doTransferResString);
 				//process and load the xml document into a getter setter for use by the application
-				brcps_helpers.pDoTrasactionRespnse(doTransferResDoc ,brcps_requests.prop);*/
+				Node node = brcps_helpers.pDoTrasactionRespnse(doTransferResDoc ,brcps_requests.prop);
+				//now this node can be manipulated for any type of activity
+				if(node.getNodeType()== Node.ELEMENT_NODE)
+				{
+					//first check if we got a success else log the responsecode gotten and try to make sense out of it
+					Element eElement = (Element)node;
+					System.out.println("Response Code : "+ 
+					eElement.getElementsByTagName(brcps_requests.prop.getProperty("dotransactionparam1")).item(0).getTextContent());
+					String responseCode = eElement.getElementsByTagName(brcps_requests.prop.getProperty("dotransactionparam1")).item(0).getTextContent();
+					if (responseCode.equals(brcps_requests.prop.getProperty("successcode").toString()))
+					{
+						//now stock up new instances of interswitchDotransferResponse objects with values
+						dTransfer.setResponseCode(eElement.getElementsByTagName(brcps_requests.prop.getProperty("dotransactionparam1")).item(0).getTextContent());
+						dTransfer.setMAC(eElement.getElementsByTagName(brcps_requests.prop.getProperty("dotransactionparam2")).item(0).getTextContent());
+						dTransfer.setTransactionReference(eElement.getElementsByTagName(brcps_requests.prop.getProperty("dotransactionparam3")).item(0).getTextContent());
+						dTransfer.setTransactionDate(eElement.getElementsByTagName(brcps_requests.prop.getProperty("dotransactionparam4")).item(0).getTextContent());
+						dTransfer.setTransferCode(eElement.getElementsByTagName(brcps_requests.prop.getProperty("dotransactionparam5")).item(0).getTextContent());
+						
+						//move the data from the pending table to the passed transactions table
+						//insert data into the response table
+						//send success sms to client
+						//transaction complete
+						//asyncCtx.complete();
+					}
+					else
+					{}
+					
+				}
+				
 				
 			} catch (UnsupportedOperationException | SOAPException e) {
 				// TODO Auto-generated catch block
@@ -115,73 +136,10 @@ public class brcps_asyncrequestprocessor implements Runnable{
 			 //i will log the null transactions as an error
 			 brcps_requests.log.error("Received :: TransactionID:"+transactionId+" ,Msisdn:"+receipient_msisdn+" ,cashout:"+
 						transfer_amount+" ,Account:"+account_no+" ,bankcode:"+bank_code);
+			 asyncCtx.complete();
 		 }
 	}
-	
-	/** message used to print the SOAP Response */
-	private static void printSOAPResponse(SOAPMessage soapResponse) throws Exception
-	{
-		TransformerFactory transformerFactory = TransformerFactory.newInstance();
-		Transformer transformer = transformerFactory.newTransformer();
-		
-		Source sourceContent = soapResponse.getSOAPPart().getContent();
-		System.out.print("\nResponse SOAP Message = ");
-		//StreamResult result = new StreamResult(System.out);
-		StreamResult result = new StreamResult(new StringWriter());
-		transformer.transform(sourceContent, result);
-		String xmlString = result.getWriter().toString();
-		
-		xmlString = brcps_helpers.decodeHtmlEntityCharacters(xmlString);
-		String removeMe = "<?xml version="+"\"1.0\""+" encoding="+"\"Windows-1252\""+"?>";
-		System.out.println(removeMe);
-		
-		xmlString =xmlString.replace(removeMe, "");
-		
-		Charset.forName("UTF-8").encode(xmlString);
-		System.out.println(xmlString);
-		try
-		{
-			Document doc  = brcps_helpers.loadXMLFromString(xmlString);
-			//File fXmlFile = new File("xmltt.xml");
-			//File fXmlFile = new File("dotransferresponse.xml");
-			//DocumentBuilderFactory dbFactory = DocumentBuilderFactory.newInstance();
-			//DocumentBuilder dBuilder = dbFactory.newDocumentBuilder();
-			//Document doc = dBuilder.parse(fXmlFile);
-			
-			//optional but recomended
-			doc.getDocumentElement().normalize();
-			System.out.println("Root element : "+doc.getDocumentElement().getNodeName());
-			NodeList nList = doc.getElementsByTagName("Response");
-			System.out.println("-----------------------------------------------------------");
-			for(int temp =0; temp<nList.getLength();temp++)
-			{
-				Node nNode = nList.item(temp);
-				System.out.println("\nCurrent Element : "+ nNode.getNodeName());
-				if(nNode.getNodeType()== Node.ELEMENT_NODE)
-				{
-					Element eElement = (Element)nNode;
-					/*System.out.println("Response Code : "+ eElement.getElementsByTagName("ResponseCode").item(0).getTextContent());
-					System.out.println("Service Provider ID : "+ eElement.getElementsByTagName("ServiceProviderId").item(0).getTextContent());
-					System.out.println("Transaction Reference : "+ eElement.getElementsByTagName("TransactionRef").item(0).getTextContent());
-					System.out.println("Request Reference : "+ eElement.getElementsByTagName("RequestReference").item(0).getTextContent());
-					System.out.println("Status : "+ eElement.getElementsByTagName("Status").item(0).getTextContent());
-					System.out.println("Empty : "+ eElement.getElementsByTagName("").item(0).getTextContent());*/
-					
-					System.out.println("Response Code : "+ eElement.getElementsByTagName("ResponseCode").item(0).getTextContent());
-					System.out.println("MAC : "+ eElement.getElementsByTagName("MAC").item(0).getTextContent());
-					System.out.println("Transaction Reference : "+ eElement.getElementsByTagName("TransactionReference").item(0).getTextContent());
-					System.out.println("Transaction Date : "+ eElement.getElementsByTagName("TransactionDate").item(0).getTextContent());
-					System.out.println("Transfer Code : "+ eElement.getElementsByTagName("TransferCode").item(0).getTextContent());
-					
-				}
-				
-			}
-		}
-		catch(Exception ex)
-		{
-			
-		}
-	}
+
 	private SOAPMessage doTransferDocument(String amount) throws Exception
     {
 		String soapuri = brcps_requests.prop.getProperty("soapuri");
