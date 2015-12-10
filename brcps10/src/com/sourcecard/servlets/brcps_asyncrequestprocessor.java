@@ -21,10 +21,7 @@ import javax.xml.soap.SOAPException;
 import javax.xml.soap.SOAPMessage;
 import javax.xml.soap.SOAPPart;
 import org.w3c.dom.Document;
-import org.w3c.dom.Element;
-import org.w3c.dom.Node;
 import org.xml.sax.InputSource;
-
 import com.sourcard.helpers.InterswitchDotransferResponse;
 import com.sourcard.helpers.SoapRunnable;
 import com.sourcard.helpers.brcps_helpers;
@@ -58,7 +55,6 @@ public class brcps_asyncrequestprocessor implements Runnable{
 	@Override
 	public void run() 
 	{
-		InterswitchDotransferResponse dTransfer  = new InterswitchDotransferResponse();
 		System.out.println("beginning to run");
 		//now we check if all variables are ok then we send a request to interswitch
 		//on-success we send a request to interswitch(DONE on debug response)
@@ -69,62 +65,36 @@ public class brcps_asyncrequestprocessor implements Runnable{
 			 brcps_requests.log.info("Received :: TransactionID:"+transactionId+" ,Msisdn:"+receipient_msisdn+" ,cashout:"+
 						transfer_amount+" ,Account:"+account_no+" ,bankcode:"+bank_code);
 			
-			try {
+			try
+			{
 				SOAPConnectionFactory soapConnectionFactory = SOAPConnectionFactory.newInstance();
 				SOAPConnection soapConnection = soapConnectionFactory.createConnection();
-				//long startTime = System.currentTimeMillis();
 				
 				ExecutorService executor = Executors.newSingleThreadExecutor();
 			    future = executor.submit(new SoapRunnable(soapConnection,
 			    		brcps_requests.prop.getProperty("soapurl").trim().toString(),
 			    		doTransferDocument(""+transfer_amount)));
 			    
-				 SOAPMessage soapResponse = future.get(90, TimeUnit.SECONDS);
-				// long elapsedTime = System.currentTimeMillis() - startTime;
-				 //convert soap message to a string 
+				SOAPMessage soapResponse = future.get(90, TimeUnit.SECONDS);
+				 
+				//convert soap message to a string 
 				String doTransferResString = brcps_helpers.ProcessDoTransferSoapMessageToString(soapResponse);
+				
 				//convert the soapmessage string to a Document file
 				Document doTransferResDoc = brcps_helpers.loadXMLFromString(doTransferResString);
-				//process and load the xml document into a getter setter for use by the application
-				Node node = brcps_helpers.pDoTrasactionRespnse(doTransferResDoc ,brcps_requests.prop);
-				//now this node can be manipulated for any type of activity
-				if(node.getNodeType()== Node.ELEMENT_NODE)
-				{
-					//first check if we got a success else log the responsecode gotten and try to make sense out of it
-					Element eElement = (Element)node;
-					System.out.println("Response Code : "+ 
-					eElement.getElementsByTagName(brcps_requests.prop.getProperty("dotransactionparam1")).item(0).getTextContent());
-					String responseCode = eElement.getElementsByTagName(brcps_requests.prop.getProperty("dotransactionparam1")).item(0).getTextContent();
-					if (responseCode.equals(brcps_requests.prop.getProperty("successcode").toString()))
-					{
-						//now stock up new instances of interswitchDotransferResponse objects with values
-						dTransfer.setResponseCode(eElement.getElementsByTagName(brcps_requests.prop.getProperty("dotransactionparam1")).item(0).getTextContent());
-						dTransfer.setMAC(eElement.getElementsByTagName(brcps_requests.prop.getProperty("dotransactionparam2")).item(0).getTextContent());
-						dTransfer.setTransactionReference(eElement.getElementsByTagName(brcps_requests.prop.getProperty("dotransactionparam3")).item(0).getTextContent());
-						dTransfer.setTransactionDate(eElement.getElementsByTagName(brcps_requests.prop.getProperty("dotransactionparam4")).item(0).getTextContent());
-						dTransfer.setTransferCode(eElement.getElementsByTagName(brcps_requests.prop.getProperty("dotransactionparam5")).item(0).getTextContent());
-						
-						//move the data from the pending table to the passed transactions table
-						//insert data into the response table
-						//send success sms to client
-						//transaction complete
-						//asyncCtx.complete();
-					}
-					else
-					{}
-					
-				}
 				
+				//process and load the xml document into a getter setter for use by the application
+				brcps_helpers.pDoTrasactionRespnse(doTransferResDoc ,brcps_requests.prop);
 				
 			} catch (UnsupportedOperationException | SOAPException e) {
-				// TODO Auto-generated catch block
 				e.printStackTrace();
+				//this transactions timed out
 			} catch (InterruptedException e) {
-				// TODO Auto-generated catch block
 				e.printStackTrace();
 			} catch (ExecutionException e) {
 				e.printStackTrace();
 			} catch (TimeoutException e) {
+				//this transactions timed out
 				e.printStackTrace();
 			} catch (Exception e) {
 				e.printStackTrace();

@@ -364,7 +364,7 @@ public class brcps_helpers {
 			
 			//=======================DoTransfer Response ======================================================
 			//replaceme--this variable should be left as an empty string
-			prop.setProperty("successcode", "9000");
+			prop.setProperty("successcode", "90000");
 			prop.setProperty("replaceme", "");
 			prop.setProperty("xmlremoveme","<?xml version="+"\"1.0\""+" encoding="+"\"utf-8\""+" ?>");
 			prop.setProperty("dotransactionxmlroot", "Response");
@@ -431,9 +431,10 @@ public class brcps_helpers {
 			}
 		}
 	}
-	
-	public static Node pDoTrasactionRespnse(Document doc ,Properties prop)
+	//==============================================================================================================================================================
+	public static void pDoTrasactionRespnse(Document doc ,Properties prop)
 	{
+		InterswitchDotransferResponse dTransfer  = new InterswitchDotransferResponse();
 		//optional but recomended
 		doc.getDocumentElement().normalize();
 		System.out.println("Root element : "+doc.getDocumentElement().getNodeName());
@@ -443,21 +444,36 @@ public class brcps_helpers {
 		for(int temp =0; temp<nList.getLength();temp++)
 		{
 			nNode = nList.item(temp);
-			/*System.out.println("\nCurrent Element : "+ nNode.getNodeName());
+			System.out.println("\nCurrent Element : "+ nNode.getNodeName());
 			if(nNode.getNodeType()== Node.ELEMENT_NODE)
 			{
 				Element eElement = (Element)nNode;
-				System.out.println("Response Code : "+ eElement.getElementsByTagName(prop.getProperty("dotransactionparam1")).item(0).getTextContent());
-				System.out.println("MAC : "+ eElement.getElementsByTagName(prop.getProperty("dotransactionparam2")).item(0).getTextContent());
-				System.out.println("TransactionReference : "+ eElement.getElementsByTagName(prop.getProperty("dotransactionparam3")).item(0).getTextContent());
-				System.out.println("TransactionDate : "+ eElement.getElementsByTagName(prop.getProperty("dotransactionparam4")).item(0).getTextContent());
-				System.out.println("TransferCode : "+ eElement.getElementsByTagName(prop.getProperty("dotransactionparam5")).item(0).getTextContent());
 				
-			}*/
+				String responseCode = eElement.getElementsByTagName(brcps_requests.prop.getProperty("dotransactionparam1").toString()).item(0).getTextContent();
+				System.out.println("inner response value :: "+responseCode);
+				if (responseCode.equals(brcps_requests.prop.getProperty("successcode").toString()))
+				{
+					System.out.println("Response Code : "+ eElement.getElementsByTagName(prop.getProperty("dotransactionparam1")).item(0).getTextContent().toString());
+					System.out.println("MAC : "+ eElement.getElementsByTagName(prop.getProperty("dotransactionparam2")).item(0).getTextContent().toString());
+					System.out.println("TransactionReference : "+ eElement.getElementsByTagName(prop.getProperty("dotransactionparam3")).item(0).getTextContent().toString());
+					System.out.println("TransactionDate : "+ eElement.getElementsByTagName(prop.getProperty("dotransactionparam4")).item(0).getTextContent().toString());
+					System.out.println("TransferCode : "+ eElement.getElementsByTagName(prop.getProperty("dotransactionparam5")).item(0).getTextContent().toString());
+					
+					//now stock up new instances of interswitchDotransferResponse objects with values
+					dTransfer.setResponseCode(eElement.getElementsByTagName(brcps_requests.prop.getProperty("dotransactionparam1")).item(0).getTextContent().toString());
+					dTransfer.setMAC(eElement.getElementsByTagName(brcps_requests.prop.getProperty("dotransactionparam2")).item(0).getTextContent().toString());
+					dTransfer.setTransactionReference(eElement.getElementsByTagName(brcps_requests.prop.getProperty("dotransactionparam3")).item(0).getTextContent().toString());
+					dTransfer.setTransactionDate(eElement.getElementsByTagName(brcps_requests.prop.getProperty("dotransactionparam4")).item(0).getTextContent().toString());
+					dTransfer.setTransferCode(eElement.getElementsByTagName(brcps_requests.prop.getProperty("dotransactionparam5")).item(0).getTextContent().toString());
+					
+					//now move the transaction from pending 
+					
+				}
+			}
 		}
-		return nNode;
 	}
-	//========================INTERSWITCH XML Helpers===============================
+	//=======================================================================================================================================================================================
+	//========================INTERSWITCH XML Helpers=====================================================
 	private final static Hashtable<String, String> htmlEntitiesTable = new Hashtable<String, String>();
 	static {
 	    htmlEntitiesTable.put("&amp;","&");
@@ -520,9 +536,9 @@ public class brcps_helpers {
 			xmlstring = result.getWriter().toString();
 			xmlstring = decodeHtmlEntityCharacters(xmlstring);
 			//String removeMe = "<?xml version="+"\"1.0\""+" encoding="+"\"Windows-1252\""+"?>";
-			String removeMe = prop.getProperty("xmlremoveme").toString();
+			String removeMe = brcps_requests.prop.getProperty("xmlremoveme").toString();
 			System.out.println(removeMe);
-			xmlstring =xmlstring.replace(removeMe, prop.getProperty("replaceme").toString()); 
+			xmlstring =xmlstring.replace(removeMe, brcps_requests.prop.getProperty("replaceme").toString()); 
 			Charset.forName("UTF-8").encode(xmlstring);
 			
 		} catch (TransformerConfigurationException e) {
