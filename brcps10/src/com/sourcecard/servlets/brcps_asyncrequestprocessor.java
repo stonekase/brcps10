@@ -22,7 +22,6 @@ import javax.xml.soap.SOAPMessage;
 import javax.xml.soap.SOAPPart;
 import org.w3c.dom.Document;
 import org.xml.sax.InputSource;
-import com.sourcard.helpers.InterswitchDotransferResponse;
 import com.sourcard.helpers.SoapRunnable;
 import com.sourcard.helpers.brcps_helpers;
 
@@ -34,7 +33,7 @@ public class brcps_asyncrequestprocessor implements Runnable{
 	HttpSession session;
 	long transfer_amount;
 	long account_no;
-	int bank_code;
+	String bank_code;
 	//transaction tag
 	final String USER = "brcps";
 	
@@ -49,7 +48,7 @@ public class brcps_asyncrequestprocessor implements Runnable{
 		this.receipient_msisdn = (String)asyncCtx.getRequest().getParameter("receipient_msisdn");
 		this.transfer_amount = Long.parseLong(asyncCtx.getRequest().getParameter("transfer_amount"));
 		this.account_no = Long.parseLong(asyncCtx.getRequest().getParameter("account_no"));
-		this.bank_code = Integer.parseInt(asyncCtx.getRequest().getParameter("bank_code"));
+		this.bank_code = (String)asyncCtx.getRequest().getParameter("bank_code");
 		 
 	}
 	@Override
@@ -84,7 +83,8 @@ public class brcps_asyncrequestprocessor implements Runnable{
 				Document doTransferResDoc = brcps_helpers.loadXMLFromString(doTransferResString);
 				
 				//process and load the xml document into a getter setter for use by the application
-				brcps_helpers.pDoTrasactionRespnse(doTransferResDoc ,brcps_requests.prop);
+				brcps_helpers.pDoTrasactionRespnse(doTransferResDoc ,brcps_requests.prop,this.transactionId,
+						this.receipient_msisdn);
 				
 			} catch (UnsupportedOperationException | SOAPException e) {
 				e.printStackTrace();
@@ -141,7 +141,7 @@ public class brcps_asyncrequestprocessor implements Runnable{
 				 +"<Lastname>"+brcps_requests.prop.getProperty("bLastname").trim().toString()+"</Lastname>"
 				 +"<Othernames>"+brcps_requests.prop.getProperty("bOthernames").trim().toString()+"</Othernames>"
 				 +"<Email>"+brcps_requests.prop.getProperty("bEmail").trim().toString()+"</Email>"
-				 +"<Phone>"+brcps_requests.prop.getProperty("bPhone").trim().toString()+"</Phone>"
+				 +"<Phone>"+this.receipient_msisdn+"</Phone>"
 				 +"</Beneficiary>"
 				 +"<Initiation>"
 				 +"<Amount>"+amount+"</Amount>"
@@ -159,7 +159,7 @@ public class brcps_asyncrequestprocessor implements Runnable{
 				 +"<Amount>"+amount+"</Amount>"
 				 +"<CurrencyCode>"+brcps_requests.prop.getProperty("TCurrencyCode").trim().toString()+"</CurrencyCode>"
 				 +"<CountryCode>"+brcps_requests.prop.getProperty("CountryCode").trim().toString()+"</CountryCode>"
-				 +"<EntityCode>"+brcps_requests.prop.getProperty("EntityCode").trim().toString()+"</EntityCode>"
+				 +"<EntityCode>"+this.bank_code+"</EntityCode>"
 				 +"<AccountReceivable>"
 				 +"<AccountNumber>"+account_no+"</AccountNumber>"
 				 +"<AccountType>"+brcps_requests.prop.getProperty("AccountType").trim().toString()+"</AccountType>"

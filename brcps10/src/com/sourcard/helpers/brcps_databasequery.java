@@ -95,13 +95,12 @@ public class brcps_databasequery {
 		try {
 			//current timestamp
 			Timestamp currentTimestamp = new java.sql.Timestamp(Calendar.getInstance().getTime().getTime());
-			String sql ="WITH moved_rows AS ("
-					+ "DELETE FROM tbl_transactions_pending a "
-					+ "USING tbl_transactions_failed b "
-					+ "WHERE transaction_id="+transaction_id
-					+"RETURNING a.id,a.msisdn,a.amount,a.transaction_time,"+transaction_status+",a.transaction_id,a.cash_amount,"+currentTimestamp+")"
-					+"INSERT INTO tbl_transactions_failed"
-					+"SELECT * FROM moved_rows";
+			String sql ="WITH moved_rows AS (DELETE FROM tbl_transactions_pending a"
+					+ " WHERE a.transaction_id="+transaction_id
+					+" RETURNING a.id,a.msisdn,a.amount,a.transaction_time,"+transaction_status+",a.transaction_id,a.cashout_amount,"+"'"+currentTimestamp+"'::timestamp)"
+					+" INSERT INTO tbl_transactions_failed"
+					+" SELECT * FROM moved_rows";
+			System.out.println("failed query::"+sql);
 			//create the prepared statement to fight against injection to my code
 			PreparedStatement pst =  conn1.prepareStatement(sql);
 			numRowsChanged = pst.executeUpdate();
@@ -120,13 +119,13 @@ public class brcps_databasequery {
 		try {
 			//current timestamp
 			Timestamp currentTimestamp = new java.sql.Timestamp(Calendar.getInstance().getTime().getTime());
-			String sql ="WITH moved_rows AS ("
-					+ "DELETE FROM tbl_transactions_pending a "
-					+ "USING tbl_transactions_reconcile b "
-					+ "WHERE transaction_id="+transaction_id
-					+"RETURNING a.id,a.msisdn,a.amount,a.transaction_time,"+transaction_status+",a.transaction_id,a.cash_amount,"+currentTimestamp+")"
-					+"INSERT INTO tbl_transactions_reconcile"
-					+"SELECT * FROM moved_rows";
+			String sql ="WITH moved_rows AS (DELETE FROM tbl_transactions_pending a"
+					+ " WHERE a.transaction_id="+transaction_id
+					+" RETURNING a.id,a.msisdn,a.amount,a.transaction_time,"+transaction_status+",a.transaction_id,a.cashout_amount,"+"'"+currentTimestamp+"'::timestamp)"
+					+" INSERT INTO tbl_transactions_reconcile"
+					+" SELECT * FROM moved_rows";
+			
+			System.out.println("reconcile query::"+sql);
 			//create the prepared statement to fight against injection to my code
 			PreparedStatement pst =  conn1.prepareStatement(sql);
 			numRowsChanged = pst.executeUpdate();
@@ -145,13 +144,13 @@ public class brcps_databasequery {
 		try {
 			//current timestamp
 			Timestamp currentTimestamp = new java.sql.Timestamp(Calendar.getInstance().getTime().getTime());
-			String sql ="WITH moved_rows AS ("
-					+ "DELETE FROM tbl_transactions_pending a "
-					+ "USING tbl_transactions_passed b "
-					+ "WHERE transaction_id="+transaction_id
-					+"RETURNING a.id,a.msisdn,a.amount,a.transaction_time,"+transaction_status+",a.transaction_id,a.cash_amount,"+currentTimestamp+")"
-					+"INSERT INTO tbl_transactions_passed"
-					+"SELECT * FROM moved_rows";
+			String sql ="WITH moved_rows AS (DELETE FROM tbl_transactions_pending a"
+					+ " WHERE a.transaction_id="+transaction_id
+					+" RETURNING a.id,a.msisdn,a.amount,a.transaction_time,"+transaction_status+",a.transaction_id,a.cashout_amount,"+"'"+currentTimestamp+"'::timestamp)"
+					+" INSERT INTO tbl_transactions_passed"
+					+" SELECT * FROM moved_rows";
+			
+			System.out.println("passed query::"+sql);
 			//create the prepared statement to fight against injection to my code
 			PreparedStatement pst =  conn1.prepareStatement(sql);
 			numRowsChanged = pst.executeUpdate();

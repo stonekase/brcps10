@@ -47,7 +47,6 @@ import com.sourcecard.servlets.brcps_requests;
 
 public class brcps_helpers {
 	
-	public static String shortcodeInput ="111";
 	final static String USER = "brcps";
 	public static Properties prop;
 	//count the number of request parameters
@@ -107,17 +106,30 @@ public class brcps_helpers {
 				System.out.println("sms sent)");
 				ResponseHandler<String> handler = new BasicResponseHandler();
 				String body = handler.handleResponse(response);
+				brcps_requests.log.info("SMS SENT::msisdn:"+receiverN0+",Response:"+body+","
+						+ "content:"+smsMessage);
 				//Task.log.info(body+":::msisdn: "+receiverN0+",Message:"+smsMessage);
 				return;
 			}
 			else if(statusCode == HttpStatus.SC_GATEWAY_TIMEOUT){
 				System.out.println("sms sending timeout");
+				ResponseHandler<String> handler = new BasicResponseHandler();
+				String body = handler.handleResponse(response);
+				brcps_requests.log.error("SMS TIMEOUT::msisdn:"+receiverN0+",Response:"+body+","
+						+ "content:"+smsMessage);
 				//Task.log.info("msisdn: "+receiverN0+",Message:"+smsMessage);
 				return;
 			}
+			else
+			{
+				ResponseHandler<String> handler = new BasicResponseHandler();
+				String body = handler.handleResponse(response);
+				brcps_requests.log.error("SMS FAILED::msisdn:"+receiverN0+",Response:"+body+","
+						+ "content:"+smsMessage);
+			}
 		}catch(Exception ex)
 		{
-			System.out.println("Error !!!! :"+ ex);System.out.println("sms sending timeout");
+			System.out.println("Error !!!! :"+ ex);
 			//Task.log.info("msisdn: "+receiverN0+",Message:"+smsMessage);
 			return;
 		}
@@ -280,10 +292,15 @@ public class brcps_helpers {
 		OutputStream output = null;
 		try {
 			output = new FileOutputStream(filepath);
+			
+			
+			//brcps server configs
+			prop.setProperty("brcpstimeout","100000");
+			
 			// set the properties value
 			prop.setProperty("username","postgres");
 			prop.setProperty("password","Madscientist1");
-			prop.setProperty("connURL", "jdbc:postgresql://localhost:5433/brcpsturbo");
+			prop.setProperty("connURL", "jdbc:postgresql://localhost:5432/brcpsturbo");
 			
 			//interswitch urls
 			
@@ -344,8 +361,8 @@ public class brcps_helpers {
 			prop.setProperty("Othernames","payments");
 			prop.setProperty("Email","oakawo@sourcecard.com.ng");
 			prop.setProperty("Phone","07010060890");
-			prop.setProperty("bLastname","customer");
-			prop.setProperty("bOthernames","brcps");
+			prop.setProperty("bLastname","brcps");
+			prop.setProperty("bOthernames","customer");
 			prop.setProperty("bEmail","oakawo@sourcecard.com.ng");
 			prop.setProperty("bPhone","07010060890");
 			prop.setProperty("Channel","7");
@@ -432,7 +449,7 @@ public class brcps_helpers {
 		}
 	}
 	//==============================================================================================================================================================
-	public static void pDoTrasactionRespnse(Document doc ,Properties prop)
+	public static void pDoTrasactionRespnse(Document doc ,Properties prop,long transactionID,String msisdn)
 	{
 		InterswitchDotransferResponse dTransfer  = new InterswitchDotransferResponse();
 		//optional but recomended
@@ -467,7 +484,15 @@ public class brcps_helpers {
 					dTransfer.setTransferCode(eElement.getElementsByTagName(brcps_requests.prop.getProperty("dotransactionparam5")).item(0).getTextContent().toString());
 					
 					//now move the transaction from pending 
-					
+					brcps_databasequery.moveTransactionToPassed(transactionID, 0);//will fix this
+					//load the 
+					brcps_databasequery.insertIntoTransactionResponse(dTransfer.getResponseCode(),dTransfer.getMAC(),
+							dTransfer.getTransactionDate(), dTransfer.getTransactionReference(), dTransfer.getTransferCode(),msisdn);
+				}
+				else
+				{
+					//now move the transaction from pending 
+					brcps_databasequery.moveTransactionToReconcile(transactionID, 1);//will fix this
 				}
 			}
 		}

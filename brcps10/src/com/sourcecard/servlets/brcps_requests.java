@@ -13,6 +13,7 @@ import javax.servlet.http.HttpServletResponse;
 import javax.servlet.http.HttpSession;
 import org.apache.tomcat.util.threads.ThreadPoolExecutor;
 import com.sourcard.helpers.*;
+
 import org.apache.log4j.Logger;
 
 /**
@@ -40,6 +41,27 @@ public class brcps_requests extends HttpServlet {
 	 * @see Servlet#init(ServletConfig)
 	 */
 	public void init(ServletConfig config) throws ServletException {
+		
+		if(OSValidator.isWindows())
+		{
+			configFile = "C:\\brcps_config.conf";
+		}
+		else if(OSValidator.isUnix())
+		{
+			configFile = "brcps_config_reloaded.conf";
+		}
+		else if(OSValidator.isMac())
+		{
+			System.out.println("mac OS:: application wont work");
+		}
+		else if(OSValidator.isSolaris())
+		{
+			System.out.println("Solaris OS:: application wont work");
+		}
+		else
+		{
+			System.out.println("Do not know this Operating System");
+		}
 		log = Logger.getLogger(brcps_requests.class);
 		//initiate the config file
 		if (brcps_helpers.FileExist(configFile))
@@ -71,7 +93,7 @@ public class brcps_requests extends HttpServlet {
 		String receipient_msisdn = (String)request.getParameter("receipient_msisdn");
 		long transfer_amount = Long.parseLong(request.getParameter("transfer_amount"));
 		long account_no = Long.parseLong(request.getParameter("account_no"));
-		int bank_code = Integer.parseInt(request.getParameter("bank_code"));
+	    String bank_code = request.getParameter("bank_code");
 		this.currentTransactionID = transactionId;
 		
 		log.info("Received :: TransactionID:"+transactionId+" ,Msisdn:"+receipient_msisdn+" ,cashout:"+
@@ -106,7 +128,8 @@ public class brcps_requests extends HttpServlet {
 		
 		AsyncContext asyncCtx = request.startAsync();
 	    //the timeout is set to be large but will be pulled from the config file
-		asyncCtx.setTimeout(100000);
+		long timeout = Long.parseLong(prop.getProperty("brcpstimeout"));
+		asyncCtx.setTimeout(timeout);
 		asyncCtx.addListener(new brcps_asynclistener());
 		
 		//getting the request and setting them up
